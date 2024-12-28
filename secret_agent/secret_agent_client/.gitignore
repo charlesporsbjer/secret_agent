@@ -1,0 +1,7 @@
+build/
+sdkconfig
+sdkconfig.old
+cert/
+go_cert/
+eol.bin
+.vscode/
