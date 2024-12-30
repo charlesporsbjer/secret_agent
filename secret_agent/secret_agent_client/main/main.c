@@ -1,5 +1,6 @@
 #include "server.h"
 #include "client.h"
+#include "serial.h"
 #include "wifi_handler.h"
 #include "printer_helper.h"
 #include "mqtt_handler.h"
@@ -8,6 +9,7 @@
 #include "esp_system.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
+#include "esp_log.h"
 
 #define SERIAL_MSG_BUF_SIZE 1024
 
@@ -31,6 +33,7 @@ wifi_init_param_t w_param = {
 
 void app_main(void)
 {
+    esp_log_level_set("wifi", ESP_LOG_WARN); 
     PRINTFC_MAIN("Main is starting");
 
     PRINTFC_MAIN("NVS Initialize");
@@ -61,10 +64,12 @@ void app_main(void)
     mqtt_event_queue = xQueueCreate(10, sizeof(esp_mqtt_event_handle_t));
     xSemaphore_mqtt_evt = xSemaphoreCreateMutex();
     xSemaphore_mqtt_client = xSemaphoreCreateMutex();
+    
 
     PRINTFC_MAIN("Starting all tasks");
     wifi_handler_start(&w_param);
     server_start(&s_param);
     client_start(&c_param);
+    vTaskDelay(pdMS_TO_TICKS(1000));
     PRINTFC_MAIN("Main is done");
 }

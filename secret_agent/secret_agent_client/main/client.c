@@ -24,7 +24,7 @@ static void client_task(void *p)
     PRINTFC_CLIENT("client is starting");
 
     // Start serial task
-    xTaskCreate(serial_task, "serial task", 8192, NULL, 5, NULL);
+  //  xTaskCreate(serial_task, "serial task", 8192, NULL, 5, NULL);
 
     // Register as a player
     register_player();
