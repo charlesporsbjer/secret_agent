@@ -5,3 +5,4 @@ cert/
 go_cert/
 eol.bin
 .vscode/
+CMakeLists.txt
