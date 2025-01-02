@@ -180,7 +180,7 @@ static void server_task(void *p)
         while (1) 
         {
             // Exchange messages (rps)
-            vTaskDelay(pdMS_TO_TICKS(500));
+            vTaskDelay(pdMS_TO_TICKS(1000));
         }
         
         PRINTFC_SERVER("Cleaning up SSL session and client connection.");
@@ -196,5 +196,8 @@ static void server_task(void *p)
 
 void server_start(server_init_param_t *param)
 {
-    xTaskCreate(server_task, "server task", 12280, param, 5, NULL);
+    if (xTaskCreate(server_task, "server task", 16384, param, 5, NULL) != pdPASS)
+    {
+        PRINTFC_SERVER("Failed to create server task");
+    }
 }

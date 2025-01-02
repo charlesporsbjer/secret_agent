@@ -6,6 +6,6 @@
 #include "freertos/FreeRTOS.h"
 #include "shared_resources.h"
 
-void chat_task(esp_mqtt_client_handle_t mqtt_client);
+void chat_task(void* mqtt_client);
 
 #endif

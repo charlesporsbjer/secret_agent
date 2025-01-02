@@ -9,30 +9,33 @@
 #include "chat.h"
 #include "freertos/queue.h"
 #include "shared_resources.h"
+#include "generate_csr.h"
 
 #define SERVER_URL "https://localhost:9191/spelare/register"
 #define CSR_ENDPOINT "https://localhost:9191/spelare/csr"
 
 
-static void client_task(void *p)
+void client_task(void *p)
 {
-    //client_init_param_t *param = (client_init_param_t *)p;
-    PRINTFC_CLIENT("HELLO MY DUDE");
+    client_init_param_t *param = (client_init_param_t *)p;
+    PRINTFC_CLIENT("Client started and waiting for Wi-Fi to connect");
     // Wait for Wi-Fi to connect
     xEventGroupWaitBits(wifi_event_group, BIT0, pdFALSE, pdTRUE, portMAX_DELAY); // Wait for the Wi-Fi connected bit
 
-    PRINTFC_CLIENT("client is starting");
-
     // Start serial task
-    xTaskCreate(serial_task, "serial task", 8192, NULL, 5, NULL);
+    PRINTFC_CLIENT("Starting serial task");
+    xTaskCreate(serial_task, "serial task", 16384, NULL, 5, NULL);
+    PRINTFC_CLIENT("Returned from serial task");
 
     // Register as a player
     register_player();
+    PRINTFC_CLIENT("Player registered");
 
     // Generate and send CSR
     char csr[2048];
-    //generate_csr(csr, sizeof(csr), "p1"); // Use the actual player ID
+    generate_csr(csr, sizeof(csr), "p1"); // Use the actual player ID
     send_csr(csr);
+    PRINTFC_CLIENT("CSR sent");
 
     // Start the game when ready
     start_game();
@@ -51,7 +54,12 @@ static void client_task(void *p)
     }
 
     // Start chat task
-    xTaskCreate(chat_task, "chat task", 8192, mqtt_client, 4, NULL);
+    if (xTaskCreate(chat_task, "chat task", 8192, (void*)mqtt_client, 4, NULL) != pdPASS) 
+    {
+        PRINTFC_CLIENT("Failed to create chat task");
+        vTaskDelete(NULL);
+        return;
+    }
 
     while (1)
     {
@@ -64,7 +72,10 @@ static void client_task(void *p)
 
 void client_start(client_init_param_t *param)
 {
-    xTaskCreate(client_task, "client task", 8192, param, 5, NULL);
+    void *p = (void *)param;
+    if (xTaskCreate(client_task, "client task", 16384, p, 5, NULL) != pdPASS) {
+        PRINTFC_CLIENT("Failed to create client task");
+    }
 }
 
 // Register ESP32 as a player
