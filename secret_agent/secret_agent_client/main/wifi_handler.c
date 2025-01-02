@@ -20,7 +20,7 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t e
 
     case WIFI_EVENT_STA_CONNECTED:
         xEventGroupSetBits(param->wifi_event_group, WIFI_CONNECTED_BIT);
-        PRINTFC_WIFI_HANDLER("Connected to AP!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        PRINTFC_WIFI_HANDLER("Connected to AP!!!");
         reconnect_counter = 0;
         break;
 
@@ -74,7 +74,6 @@ void wifi_handler_start(wifi_init_param_t *param)
     ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &ip_event_handler, param, NULL));
     PRINTFC_WIFI_HANDLER("IP event handler registered");
 
-    PRINTFC_WIFI_HANDLER("THE ERROR IS PROBABLY HERE");
     wifi_config_t wifi_config = {
         .sta = {
             .pmf_cfg = {
@@ -82,16 +81,6 @@ void wifi_handler_start(wifi_init_param_t *param)
             },
         },
     };
-    // = {
-    //     .sta = {
-    //         .ssid = {param->ssid},
-    //         .password = {param->password},
-    //         // .pmf_cfg = {
-    //         //     .capable = false,
-    //         //     .required = false
-    //         // },
-    //     },
-    // };
     
     memcpy(wifi_config.sta.ssid, param->ssid, sizeof(wifi_config.sta.ssid));
     memcpy(wifi_config.sta.password, param->password, sizeof(wifi_config.sta.password));
