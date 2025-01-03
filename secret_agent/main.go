@@ -8,12 +8,8 @@ import (
 )
 
 func main() {
-
-	keyPath := "./go_cert/ca.key"
-
-	certPath := "./go_cert/ca.crt"
-
-	cert, err := tls.LoadX509KeyPair(certPath, keyPath)
+	// Load server certificates
+	cert, err := tls.LoadX509KeyPair("./go_cert/ca.crt", "./go_cert/ca_decrypted.key")
 	if err != nil {
 		log.Fatalf("Failed to load certificate and key pair: %v", err)
 	}
@@ -28,7 +24,12 @@ func main() {
 		TLSConfig: &tls.Config{Certificates: []tls.Certificate{cert}},
 	}
 
-	log.Println("Server is starting on https://localhost:9191")
+	// // Register endpoints
+	// http.HandleFunc("/spelare/register", playerRegistrationHandler)
+	// http.HandleFunc("/spelare/csr", playerCSRHandler)
+	// http.HandleFunc("/start", startGameHandler)
+
+	fmt.Println("Server is running on https://localhost:9191")
 	if err := server.ListenAndServeTLS("", ""); err != nil {
 		log.Fatalf("Server failed: %v", err)
 	}
