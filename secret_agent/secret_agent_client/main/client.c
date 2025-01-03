@@ -11,9 +11,13 @@
 #include "shared_resources.h"
 #include "generate_csr.h"
 
-#define SERVER_URL "https://localhost:9191/spelare/register"
-#define CSR_ENDPOINT "https://localhost:9191/spelare/csr"
+//#define SERVER_URL "https://localhost:9191/spelare/register"
 
+#define CSR_ENDPOINT "https://" SERVER_IP ":9191/spelare/csr"
+#define SERVER_IP "172.16.216.46"
+#define SERVER_URL "https://" SERVER_IP ":9191/spelare/register"
+#define SERVER_HANDSHAKE "https://" SERVER_IP ":9191/spelare"
+#define SERVER_START "https://" SERVER_IP ":9191/start"
 
 void client_task(void *p)
 {
@@ -28,47 +32,96 @@ void client_task(void *p)
     PRINTFC_CLIENT("Returned from serial task");
 
     // Register as a player
-    register_player();
+   // register_player();
     PRINTFC_CLIENT("Player registered");
 
     // Generate and send CSR
     char csr[2048];
     generate_csr(csr, sizeof(csr), "p1"); // Use the actual player ID
-    send_csr(csr);
+   // send_csr(csr);
     PRINTFC_CLIENT("CSR sent");
 
     // Start the game when ready
-    start_game();
+   // start_game();
 
     // Example MQTT initialization
     // Initialize the MQTT client and return the handle
-    esp_mqtt_client_handle_t mqtt_client = mqtt_app_start();
-    if (mqtt_client) {
-        if (xSemaphoreTake(xSemaphore_mqtt_client, portMAX_DELAY) == pdTRUE) {
-            PRINTFC_CLIENT("MQTT client initialized successfully.");
-            mqtt_subscribe(mqtt_client);
-            xSemaphoreGive(xSemaphore_mqtt_client);
-        } else {
-            PRINTFC_CLIENT("Failed to take MQTT semaphore.");
-        }
-    }
+    // esp_mqtt_client_handle_t mqtt_client = mqtt_app_start();
+    // if (mqtt_client) {
+    //     if (xSemaphoreTake(xSemaphore_mqtt_client, portMAX_DELAY) == pdTRUE) {
+    //         PRINTFC_CLIENT("MQTT client initialized successfully.");
+    //         mqtt_subscribe(mqtt_client);
+    //         xSemaphoreGive(xSemaphore_mqtt_client);
+    //     } else {
+    //         PRINTFC_CLIENT("Failed to take MQTT semaphore.");
+    //     }
+    // }
 
-    // Start chat task
-    if (xTaskCreate(chat_task, "chat task", 8192, (void*)mqtt_client, 4, NULL) != pdPASS) 
-    {
-        PRINTFC_CLIENT("Failed to create chat task");
-        vTaskDelete(NULL);
-        return;
-    }
+    // // Start chat task
+    // if (xTaskCreate(chat_task, "chat task", 8192, (void*)mqtt_client, 4, NULL) != pdPASS) 
+    // {
+    //     PRINTFC_CLIENT("Failed to create chat task");
+    //     vTaskDelete(NULL);
+    //     return;
+    // }
 
     while (1)
     {
+
+
+        send_server_request();
+        PRINTFC_CLIENT("Client task  LOOP");
         // Periodic task or logic (e.g., game state updates, handling MQTT messages)
-        vTaskDelay(pdMS_TO_TICKS(1000)); // Adjust the delay as needed
+        vTaskDelay(pdMS_TO_TICKS(5000)); // Adjust the delay as needed
     }
 
     vTaskDelete(NULL);
 }
+
+void send_server_request(){
+
+    esp_http_client_config_t config = {
+        .url = SERVER_START,
+        .cert_pem = (const char*)server_cert_pem_start,
+        .client_cert_pem = (const char*)client_cert_pem_start,
+        .client_key_pem = (const char*)client_key_pem_start,
+        
+    };
+    
+
+    esp_http_client_handle_t client = esp_http_client_init(&config);
+
+    if (client == NULL) {
+        PRINTFC_CLIENT("Failed to initialize HTTP client\n");
+        return;
+    }
+    
+    esp_http_client_set_method(client, HTTP_METHOD_POST);
+    esp_err_t err = esp_http_client_perform(client);
+    
+    if (err == ESP_OK) {
+        PRINTFC_CLIENT("HTTP POST Status = %d, content_length = %lld\n",
+               esp_http_client_get_status_code(client),
+               esp_http_client_get_content_length(client));
+
+        // Handle response
+        char response[128];
+        int content_length = esp_http_client_read(client, response, sizeof(response) - 1);
+        if (content_length > 0) {
+            response[content_length] = '\0';
+            PRINTFC_CLIENT("Response: %s\n", response);
+
+            // Parse and store player ID if needed
+        }
+    } else {
+        PRINTFC_CLIENT("Error performing HTTP POST: %s\n", esp_err_to_name(err));
+    }
+
+}
+
+
+
+
 
 void client_start(client_init_param_t *param)
 {
@@ -84,6 +137,9 @@ void register_player()
     esp_http_client_config_t config = {
         .url = SERVER_URL,
         .cert_pem = (const char*)server_cert_pem_start, // Server's certificate for verification
+        .client_cert_pem = (const char*)client_cert_pem_start,
+        .client_key_pem = (const char*)client_key_pem_start,
+
     };
 
     esp_http_client_handle_t client = esp_http_client_init(&config);
@@ -122,6 +178,8 @@ void send_csr(const char *csr)
     esp_http_client_config_t config = {
         .url = CSR_ENDPOINT,
         .cert_pem = (const char*)server_cert_pem_start,
+        .client_cert_pem = (const char*)client_cert_pem_start,
+        .client_key_pem = (const char*)client_key_pem_start,
     };
 
     esp_http_client_handle_t client = esp_http_client_init(&config);
@@ -150,7 +208,7 @@ void start_game()
     const char *json_payload = "{\"val\": \"nu kör vi\"}";
 
     esp_http_client_config_t config = {
-        .url = "https://localhost:9191/start",
+        .url = SERVER_START,
         .cert_pem = (const char*)server_cert_pem_start,
     };
 
