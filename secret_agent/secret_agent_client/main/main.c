@@ -8,6 +8,7 @@
 #include "esp_system.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
+#include "esp_log.h"
 
 #define SERIAL_MSG_BUF_SIZE 1024
 
@@ -32,6 +33,8 @@ wifi_init_param_t w_param = {
 void app_main(void)
 {
     PRINTFC_MAIN("Main is starting");
+
+    esp_log_level_set("wifi", ESP_LOG_ERROR);
 
     PRINTFC_MAIN("NVS Initialize");
     esp_err_t err = nvs_flash_init();
