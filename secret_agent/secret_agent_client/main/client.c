@@ -12,9 +12,10 @@
 #include "generate_csr.h"
 
 //#define SERVER_URL "https://localhost:9191/spelare/register"
-
+//172.16.219.34
 #define CSR_ENDPOINT "https://" SERVER_IP ":9191/spelare/csr"
-#define SERVER_IP "172.16.216.46"
+//#define SERVER_IP "172.16.216.46"  charlie
+#define SERVER_IP "172.16.219.34"   //patrik
 #define SERVER_URL "https://" SERVER_IP ":9191/spelare/register"
 #define SERVER_HANDSHAKE "https://" SERVER_IP ":9191/spelare"
 #define SERVER_START "https://" SERVER_IP ":9191/start"
@@ -37,7 +38,7 @@ void client_task(void *p)
 
     // Generate and send CSR
     char csr[2048];
-    generate_csr(csr, sizeof(csr), "p1"); // Use the actual player ID
+   // generate_csr(csr, sizeof(csr), "p1"); // Use the actual player ID
    // send_csr(csr);
     PRINTFC_CLIENT("CSR sent");
 
@@ -82,10 +83,7 @@ void send_server_request(){
 
     esp_http_client_config_t config = {
         .url = SERVER_START,
-        .cert_pem = (const char*)server_cert_pem_start,
-        .client_cert_pem = (const char*)client_cert_pem_start,
-        .client_key_pem = (const char*)client_key_pem_start,
-        
+        .cert_pem = (const char*)ca_cert_pem_start,
     };
     
 
@@ -136,9 +134,8 @@ void register_player()
 {
     esp_http_client_config_t config = {
         .url = SERVER_URL,
-        .cert_pem = (const char*)server_cert_pem_start, // Server's certificate for verification
-        .client_cert_pem = (const char*)client_cert_pem_start,
-        .client_key_pem = (const char*)client_key_pem_start,
+        .cert_pem = (const char*)ca_cert_pem_start, // Server's certificate for verification
+        
 
     };
 
@@ -177,9 +174,7 @@ void send_csr(const char *csr)
 {
     esp_http_client_config_t config = {
         .url = CSR_ENDPOINT,
-        .cert_pem = (const char*)server_cert_pem_start,
-        .client_cert_pem = (const char*)client_cert_pem_start,
-        .client_key_pem = (const char*)client_key_pem_start,
+        .cert_pem = (const char*)ca_cert_pem_start     
     };
 
     esp_http_client_handle_t client = esp_http_client_init(&config);
@@ -209,7 +204,7 @@ void start_game()
 
     esp_http_client_config_t config = {
         .url = SERVER_START,
-        .cert_pem = (const char*)server_cert_pem_start,
+        .cert_pem = (const char*)ca_cert_pem_start,
     };
 
     esp_http_client_handle_t client = esp_http_client_init(&config);
