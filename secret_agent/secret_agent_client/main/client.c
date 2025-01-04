@@ -42,29 +42,6 @@ void client_task(void *p)
    // send_csr(csr);
     PRINTFC_CLIENT("CSR sent");
 
-    // Start the game when ready
-   // start_game();
-
-    // Example MQTT initialization
-    // Initialize the MQTT client and return the handle
-    // esp_mqtt_client_handle_t mqtt_client = mqtt_app_start();
-    // if (mqtt_client) {
-    //     if (xSemaphoreTake(xSemaphore_mqtt_client, portMAX_DELAY) == pdTRUE) {
-    //         PRINTFC_CLIENT("MQTT client initialized successfully.");
-    //         mqtt_subscribe(mqtt_client);
-    //         xSemaphoreGive(xSemaphore_mqtt_client);
-    //     } else {
-    //         PRINTFC_CLIENT("Failed to take MQTT semaphore.");
-    //     }
-    // }
-
-    // // Start chat task
-    // if (xTaskCreate(chat_task, "chat task", 8192, (void*)mqtt_client, 4, NULL) != pdPASS) 
-    // {
-    //     PRINTFC_CLIENT("Failed to create chat task");
-    //     vTaskDelete(NULL);
-    //     return;
-    // }
 
     while (1)
     {

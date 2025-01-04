@@ -10,40 +10,23 @@ static int reconnect_counter = 0;
 
 static void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
 {
-    wifi_init_param_t *param = (wifi_init_param_t *)arg;
     switch (event_id)
     {
     case WIFI_EVENT_STA_START:
-
+        PRINTFC_WIFI_HANDLER("WiFi started");
         esp_wifi_connect();
         break;
 
-    case WIFI_EVENT_STA_CONNECTED:
-        xEventGroupSetBits(param->wifi_event_group, WIFI_CONNECTED_BIT);
-        PRINTFC_WIFI_HANDLER("Connected to AP!!!");
-        reconnect_counter = 0;
-        break;
-
     case WIFI_EVENT_STA_DISCONNECTED:
-        xEventGroupClearBits(param->wifi_event_group, WIFI_CONNECTED_BIT | WIFI_HAS_IP_BIT);
-        if (reconnect_counter < WIFI_RECONNECT_MAX_ATTEMPT)
-        {
-            reconnect_counter++;
-            esp_wifi_connect();
-        }
+        PRINTFC_WIFI_HANDLER("WiFi disconnected, retrying");
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        esp_wifi_connect();     
+        break;
+    case WIFI_EVENT_STA_CONNECTED:
+        PRINTFC_WIFI_HANDLER("WiFi connected");
         break;
 
-    default:
-        break;
-    }
-}
-
-static void ip_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
-{
-    wifi_init_param_t *param = (wifi_init_param_t *)arg;
-    switch (event_id)
-    {
-    case IP_EVENT_STA_GOT_IP:
+    case WIFI_EVENT_STA_GOT_IP:
         PRINTFC_WIFI_HANDLER("Got IP");
         xEventGroupSetBits(param->wifi_event_group, WIFI_HAS_IP_BIT);
         break;
@@ -51,7 +34,24 @@ static void ip_event_handler(void *arg, esp_event_base_t event_base, int32_t eve
     default:
         break;
     }
+   
 }
+
+
+// static void ip_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
+// {
+//     wifi_init_param_t *param = (wifi_init_param_t *)arg;
+//     switch (event_id)
+//     {
+//     case IP_EVENT_STA_GOT_IP:
+//         PRINTFC_WIFI_HANDLER("Got IP");
+//         xEventGroupSetBits(param->wifi_event_group, WIFI_HAS_IP_BIT);
+//         break;
+
+//     default:
+//         break;
+//     }
+// }
 
 void wifi_handler_start(wifi_init_param_t *param)
 {
@@ -71,7 +71,7 @@ void wifi_handler_start(wifi_init_param_t *param)
 
     esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, param, NULL);
     PRINTFC_WIFI_HANDLER("Wifi event handler registered");
-    ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &ip_event_handler, param, NULL));
+    //ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &ip_event_handler, param, NULL));
     PRINTFC_WIFI_HANDLER("IP event handler registered");
 
     wifi_config_t wifi_config = {
