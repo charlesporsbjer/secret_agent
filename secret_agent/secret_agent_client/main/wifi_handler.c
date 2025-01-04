@@ -6,8 +6,6 @@
 #include "lwip/err.h"
 #include "lwip/sys.h"
 
-static int reconnect_counter = 0;
-
 static void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
 {
     wifi_init_param_t *param = (wifi_init_param_t *)arg;
@@ -40,34 +38,18 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t e
    
 }
 
-
-// static void ip_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
-// {
-//     wifi_init_param_t *param = (wifi_init_param_t *)arg;
-//     switch (event_id)
-//     {
-//     case IP_EVENT_STA_GOT_IP:
-//         PRINTFC_WIFI_HANDLER("Got IP");
-//         xEventGroupSetBits(param->wifi_event_group, WIFI_HAS_IP_BIT);
-//         break;
-
-//     default:
-//         break;
-//     }
-// }
-
-void wifi_handler_start(wifi_init_param_t *param)
+void wifi_init_start(wifi_init_param_t *param)
 {
-    PRINTFC_WIFI_HANDLER("WiFi Handler is starting");
+    PRINTFC_WIFI_HANDLER("WiFi Handler is starting, do we need the following prints?");
 
-    PRINTFC_WIFI_HANDLER("Using ssid: %s%s%s", green, param->ssid, reset);
-    PRINTFC_WIFI_HANDLER("Using password: %s%s%s", green, param->password, reset);
+    PRINTFC_WIFI_HANDLER("Using ssid: %s%s%s", green, param->ssid, reset);  // varför är dom här här?
+    PRINTFC_WIFI_HANDLER("Using password: %s%s%s", green, param->password, reset); /// ?
 
     PRINTFC_WIFI_HANDLER("Init network interface");
     ESP_ERROR_CHECK(esp_netif_init());
 
     esp_netif_t *netif = esp_netif_create_default_wifi_sta();
-    assert(netif != NULL);
+    assert(netif != NULL); //Varför är du här? viktigt?
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
