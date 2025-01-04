@@ -10,10 +10,13 @@ static int reconnect_counter = 0;
 
 static void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
 {
+    wifi_init_param_t *param = (wifi_init_param_t *)arg;
     switch (event_id)
     {
     case WIFI_EVENT_STA_START:
-        PRINTFC_WIFI_HANDLER("WiFi started");
+        PRINTFC_WIFI_HANDLER("WiFi started with SSID: %s and PASS: %s", \
+         ((wifi_init_param_t *)param)->ssid, \
+         ((wifi_init_param_t *)param)->password);        
         esp_wifi_connect();
         break;
 
@@ -27,11 +30,11 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t e
         break;
 
     case WIFI_EVENT_STA_GOT_IP:
-        PRINTFC_WIFI_HANDLER("Got IP");
-        xEventGroupSetBits(param->wifi_event_group, WIFI_HAS_IP_BIT);
+        PRINTFC_WIFI_HANDLER("Got IP: %s", ip4addr_ntoa(&((wifi_event_sta_got_ip_t *)event_data)->ip_info.ip));     
         break;
 
     default:
+        PRINTFC_WIFI_HANDLER("Unknown event: %d", event_id);
         break;
     }
    
