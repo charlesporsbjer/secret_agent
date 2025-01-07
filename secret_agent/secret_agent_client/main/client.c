@@ -15,7 +15,8 @@
 //172.16.219.34
 #define CSR_ENDPOINT "https://" SERVER_IP ":9191/spelare/csr"
 
-#define SERVER_IP "172.16.219.34"   //patrik
+//#define SERVER_IP "172.16.219.34"   //patrik
+#define SERVER_IP "192.168.0.127" hemma
 #define SERVER_URL "https://" SERVER_IP ":9191/spelare/register"
 #define SERVER_HANDSHAKE "https://" SERVER_IP ":9191/spelare"
 #define SERVER_START "https://" SERVER_IP ":9191/start"
@@ -35,31 +36,20 @@ void client_task(void *p)
   //  xTaskCreate(serial_task, "serial task", 8192, NULL, 5, NULL);
 
     // Register as a player
-    register_player();
+   // register_player();
 
     // Generate and send CSR
-    char csr[2048];
+ 
     //generate_csr(csr, sizeof(csr), "p1"); // Use the actual player ID
-    send_csr(csr);
+   // send_csr();
 
     // Start the game when ready
-    start_game();
+    //start_game();
 
-    // Example MQTT initialization
-    // Initialize the MQTT client and return the handle
-    esp_mqtt_client_handle_t mqtt_client = mqtt_app_start();
-    if (mqtt_client) {
-        if (xSemaphoreTake(xSemaphore_mqtt_client, portMAX_DELAY) == pdTRUE) {
-            PRINTFC_CLIENT("MQTT client initialized successfully.");
-            mqtt_subscribe(mqtt_client);
-            xSemaphoreGive(xSemaphore_mqtt_client);
-        } else {
-            PRINTFC_CLIENT("Failed to take MQTT semaphore.");
-        }
-    }
+
 
     // Start chat task
-    xTaskCreate(chat_task, "chat task", 8192, mqtt_client, 4, NULL);
+   // xTaskCreate(chat_task, "chat task", 8192, mqtt_client, 4, NULL);
 
     while (1)
     {
@@ -164,7 +154,7 @@ void register_player()
     esp_http_client_cleanup(client);
 }
 
-void send_csr(const char *csr)
+void send_csr()
 {
     char csr[2048];
     generate_csr(csr, sizeof(csr), "p1"); // Use the actual player ID
@@ -274,3 +264,17 @@ esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
     }
     return ESP_OK;
 }
+
+
+    // Example MQTT initialization
+    // Initialize the MQTT client and return the handle
+    // esp_mqtt_client_handle_t mqtt_client = mqtt_app_start();
+    // if (mqtt_client) {
+    //     if (xSemaphoreTake(xSemaphore_mqtt_client, portMAX_DELAY) == pdTRUE) {
+    //         PRINTFC_CLIENT("MQTT client initialized successfully.");
+    //         mqtt_subscribe(mqtt_client);
+    //         xSemaphoreGive(xSemaphore_mqtt_client);
+    //     } else {
+    //         PRINTFC_CLIENT("Failed to take MQTT semaphore.");
+    //     }
+    // }

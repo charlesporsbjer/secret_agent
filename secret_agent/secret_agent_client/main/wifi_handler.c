@@ -20,6 +20,7 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t e
 
     case WIFI_EVENT_STA_DISCONNECTED:
         PRINTFC_WIFI_HANDLER("WiFi disconnected, retrying");
+        xEventGroupClearBits(param->wifi_event_group, WIFI_CONNECTED_BIT);
         vTaskDelay(pdMS_TO_TICKS(1000));
         esp_wifi_connect();     
         break;

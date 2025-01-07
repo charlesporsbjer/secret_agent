@@ -19,7 +19,7 @@ void register_player();
 
 void send_server_request();
 
-void send_csr(const char *csr);
+void send_csr();
 
 void start_game();
 
