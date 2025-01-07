@@ -16,10 +16,12 @@
 #define CSR_ENDPOINT "https://" SERVER_IP ":9191/spelare/csr"
 
 //#define SERVER_IP "172.16.219.34"   //patrik
-#define SERVER_IP "192.168.0.127" hemma
-#define SERVER_URL "https://" SERVER_IP ":9191/spelare/register"
+#define SERVER_IP "192.168.0.127" //HEMMA
+#define SERVER_REGISTER "https://" SERVER_IP ":9191/spelare/register"
 #define SERVER_HANDSHAKE "https://" SERVER_IP ":9191/spelare"
 #define SERVER_START "https://" SERVER_IP ":9191/start"
+#define SERVER_TEST "https://" SERVER_IP ":9191/test"
+#define SERVER_URL "https://" SERVER_IP ":9191/spelare/register"
 
 void client_task(void *p)
 {
@@ -37,7 +39,6 @@ void client_task(void *p)
 
     // Register as a player
    // register_player();
-
     // Generate and send CSR
  
     //generate_csr(csr, sizeof(csr), "p1"); // Use the actual player ID
@@ -66,7 +67,7 @@ void client_task(void *p)
 void send_server_request(){
 
     esp_http_client_config_t config = {
-        .url = SERVER_START,
+        .url = SERVER_TEST,
         .cert_pem = (const char*)ca_cert_pem_start,
     };
     
