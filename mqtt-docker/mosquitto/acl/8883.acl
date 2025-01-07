@@ -1,0 +1,12 @@
+user user
+topic write hello/world
+topic read world/hello
+topic read world/+
+
+user user2
+topic write hello2/world2
+
+user superuser
+topic readwrite hello/+/world
+
+pattern readwrite hello/%u/world

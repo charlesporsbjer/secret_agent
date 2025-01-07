@@ -11,9 +11,13 @@
 #include "shared_resources.h"
 #include "generate_csr.h"
 
-#define SERVER_URL "https://localhost:9191/spelare/register"
-#define CSR_ENDPOINT "https://localhost:9191/spelare/csr"
+#define SERVER_IP "172.16.216.188" // Change this to the server IP address
 
+#define SERVER_URL          "https://" SERVER_IP ":9191"
+#define SERVER_SPELARE_URL  "https://" SERVER_IP ":9191/spelare"
+#define SERVER_REGISTER_URL "https://" SERVER_IP ":9191/spelare/register"
+#define SERVER_START_URL    "https://" SERVER_IP ":9191/start"
+#define CSR_ENDPOINT        "https://" SERVER_IP ":9191/spelare/csr"
 
 void client_task(void *p)
 {
@@ -89,7 +93,7 @@ void register_player()
     esp_http_client_handle_t client = esp_http_client_init(&config);
 
     if (client == NULL) {
-        PRINTFC_CLIENT("Failed to initialize HTTP client\n");
+        PRINTFC_CLIENT("Failed to initialize HTTP client");
         return;
     }
 
@@ -97,7 +101,7 @@ void register_player()
     esp_err_t err = esp_http_client_perform(client);
 
     if (err == ESP_OK) {
-        PRINTFC_CLIENT("HTTP POST Status = %d, content_length = %lld\n",
+        PRINTFC_CLIENT("HTTP POST Status = %d, content_length = %lld",
                esp_http_client_get_status_code(client),
                esp_http_client_get_content_length(client));
 
@@ -106,12 +110,12 @@ void register_player()
         int content_length = esp_http_client_read(client, response, sizeof(response) - 1);
         if (content_length > 0) {
             response[content_length] = '\0';
-            PRINTFC_CLIENT("Response: %s\n", response);
+            PRINTFC_CLIENT("Response: %s", response);
 
             // Parse and store player ID if needed
         }
     } else {
-        PRINTFC_CLIENT("Error performing HTTP POST: %s\n", esp_err_to_name(err));
+        PRINTFC_CLIENT("Error performing HTTP POST: %s", esp_err_to_name(err));
     }
 
     esp_http_client_cleanup(client);
@@ -127,7 +131,7 @@ void send_csr(const char *csr)
     esp_http_client_handle_t client = esp_http_client_init(&config);
 
     if (client == NULL) {
-        PRINTFC_CLIENT("Failed to initialize HTTP client\n");
+        PRINTFC_CLIENT("Failed to initialize HTTP client");
         return;
     }
 
@@ -136,10 +140,10 @@ void send_csr(const char *csr)
     esp_err_t err = esp_http_client_perform(client);
 
     if (err == ESP_OK) {
-        PRINTFC_CLIENT("CSR submitted successfully.\n");
+        PRINTFC_CLIENT("CSR submitted successfully.");
         // Handle server response if needed (signed certificate)
     } else {
-        PRINTFC_CLIENT("Error sending CSR: %s\n", esp_err_to_name(err));
+        PRINTFC_CLIENT("Error sending CSR: %s", esp_err_to_name(err));
     }
 
     esp_http_client_cleanup(client);
@@ -150,14 +154,14 @@ void start_game()
     const char *json_payload = "{\"val\": \"nu kör vi\"}";
 
     esp_http_client_config_t config = {
-        .url = "https://localhost:9191/start",
+        .url = SERVER_START_URL,
         .cert_pem = (const char*)server_cert_pem_start,
     };
 
     esp_http_client_handle_t client = esp_http_client_init(&config);
 
     if (client == NULL) {
-        PRINTFC_CLIENT("Failed to initialize HTTP client\n");
+        PRINTFC_CLIENT("Failed to initialize HTTP client");
         return;
     }
 
@@ -166,9 +170,9 @@ void start_game()
     esp_err_t err = esp_http_client_perform(client);
 
     if (err == ESP_OK) {
-        PRINTFC_CLIENT("Game start request sent successfully.\n");
+        PRINTFC_CLIENT("Game start request sent successfully.");
     } else {
-        PRINTFC_CLIENT("Error starting game: %s\n", esp_err_to_name(err));
+        PRINTFC_CLIENT("Error starting game: %s", esp_err_to_name(err));
     }
 
     esp_http_client_cleanup(client);
@@ -179,13 +183,13 @@ void mqtt_subscribe(esp_mqtt_client_handle_t client)
     if (xSemaphoreTake(xSemaphore_mqtt_client, portMAX_DELAY) == pdTRUE) {
         int msg_id = esp_mqtt_client_subscribe(client, "/myndigheten", 0);
         if (msg_id != -1) {
-            PRINTFC_CLIENT("Subscribed to /myndigheten successfully.\n");
+            PRINTFC_CLIENT("Subscribed to /myndigheten successfully.");
         } else {
-            PRINTFC_CLIENT("Subscription failed.\n");
+            PRINTFC_CLIENT("Subscription failed.");
         }
         xSemaphoreGive(xSemaphore_mqtt_client);
     } else {
-        PRINTFC_CLIENT("Failed to take MQTT semaphore.\n");
+        PRINTFC_CLIENT("Failed to take MQTT semaphore.");
     }
 }
 
@@ -194,14 +198,14 @@ void mqtt_publish(esp_mqtt_client_handle_t client, const char *topic, const char
     if (xSemaphoreTake(xSemaphore_mqtt_client, portMAX_DELAY) == pdTRUE) {
         int msg_id = esp_mqtt_client_publish(client, topic, message, 0, 1, 0);
         if (msg_id != -1) {
-            PRINTFC_CLIENT("Message published to %s.\n", topic);
+            PRINTFC_CLIENT("Message published to %s.", topic);
         } else {
-            PRINTFC_CLIENT("Publish failed.\n");
+            PRINTFC_CLIENT("Publish failed.");
         }
         xSemaphoreGive(xSemaphore_mqtt_client);
     } 
     else {
-        PRINTFC_CLIENT("Failed to take MQTT semaphore.\n");
+        PRINTFC_CLIENT("Failed to take MQTT semaphore.");
     }    
 }
 
@@ -209,7 +213,7 @@ esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
 {
     switch (event->event_id) {
         case MQTT_EVENT_DATA:
-            PRINTFC_CLIENT("Received data: Topic=%.*s, Message=%.*s\n",
+            PRINTFC_CLIENT("Received data: Topic=%.*s, Message=%.*s",
                    event->topic_len, event->topic,
                    event->data_len, event->data);
             // Process the message (e.g., update game state)

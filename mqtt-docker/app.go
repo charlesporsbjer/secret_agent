@@ -12,11 +12,12 @@ import (
 	"io"
 	"log"
 	"math/big"
-	mathrand "math/rand"
 	"net/http"
 	"os"
 	"sync"
 	"time"
+
+	mathrand "math/rand"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
@@ -50,7 +51,7 @@ func init() {
 }
 
 func main() {
-	mqttOpts := mqtt.NewClientOptions().AddBroker("tcp://localhost:1883").SetClientID("server")
+	mqttOpts := mqtt.NewClientOptions().AddBroker("mqtt://mosquitto:8883").SetClientID("server").SetPassword("passwd")
 	mqttClient = mqtt.NewClient(mqttOpts)
 
 	if token := mqttClient.Connect(); token.Wait() && token.Error() != nil {
@@ -59,7 +60,7 @@ func main() {
 
 	log.Println("Connected to MQTT broker")
 
-	cert, err := tls.LoadX509KeyPair("./go_cert/go_server.crt", "./go_cert/go_server.key")
+	cert, err := tls.LoadX509KeyPair("./cert/server.crt", "./cert/server.key")
 	if err != nil {
 		log.Fatalf("Failed to load server certificates: %v", err)
 	}
@@ -80,7 +81,7 @@ func main() {
 	http.HandleFunc("/start", startGameHandler)
 
 	fmt.Println("Server is running on https://localhost:9191")
-	if err := server.ListenAndServeTLS("./go_cert/go_server.crt", "./go_cert/go_server.key"); err != nil {
+	if err := server.ListenAndServeTLS("./cert/server.crt", "./cert/server.key"); err != nil {
 		log.Fatalf("Server failed: %v", err)
 	}
 }

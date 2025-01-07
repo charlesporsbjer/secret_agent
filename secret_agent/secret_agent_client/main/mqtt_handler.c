@@ -2,7 +2,8 @@
 #include "printer_helper.h"
 #include "certs.h"
 
-#define MQTT_BROKER_URI "mqtts://localhost:8883"
+#define BROKER_IP "172.20.80.1"
+#define MQTT_BROKER_URI "mqtts://" BROKER_IP ":8883"
 
 static void log_error_if_nonzero(const char *message, int error_code)
 {

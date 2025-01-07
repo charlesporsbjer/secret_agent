@@ -6,7 +6,6 @@
 #include "string.h"
 #include "printer_helper.h"
 
-
 QueueHandle_t tls_msg_queue;
 
 void msg_init() 
