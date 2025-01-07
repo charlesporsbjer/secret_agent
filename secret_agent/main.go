@@ -26,7 +26,7 @@ func main() {
 
 	// // Register endpoints
 	//http.HandleFunc("/spelare/register", playerRegistrationHandler)
-    
+
 	// http.HandleFunc("/spelare/csr", playerCSRHandler)
 	// http.HandleFunc("/start", startGameHandler)
 
@@ -35,8 +35,7 @@ func main() {
 		log.Fatalf("Server failed: %v", err)
 	}
 
-
-    http.HandleFunc("/spelare/test", clientTestHandler)
+	http.HandleFunc("/spelare/test", clientTestHandler)
 	// Register endpoints
 	// http.HandleFunc("/spelare/register", playerRegistrationHandler)
 	// http.HandleFunc("/spelare/csr", playerCSRHandler)
@@ -45,15 +44,15 @@ func main() {
 }
 
 func clientTestHandler(w http.ResponseWriter, r *http.Request) {
-    fmt.Println("Client test request received.")
-    if r.Method != http.MethodPost {
-        http.Error(w, "Only POST requests are allowed", http.StatusMethodNotAllowed)
-        return
-    }
-    response := `{"message": "Client test successful"}`
-    w.Header().Set("Content-Type", "application/json")
-    w.WriteHeader(http.StatusOK)
-    w.Write([]byte(response))
+	fmt.Println("Client test request received.")
+	if r.Method != http.MethodPost {
+		http.Error(w, "Only POST requests are allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	response := `{"message": "Client test successful"}`
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(response))
 }
 
 func playerRegistrationHandler(w http.ResponseWriter, r *http.Request) {
