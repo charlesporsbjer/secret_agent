@@ -7,8 +7,9 @@
 
 #define BUF_SIZE 256
 
-void chat_task(esp_mqtt_client_handle_t mqtt_client)
+void chat_task(void* mqtt_client_p)
 {
+    esp_mqtt_client_handle_t mqtt_client = (esp_mqtt_client_handle_t)mqtt_client_p;
     PRINTFC_CHAT("Chat task is starting");
 
     char serial_msg[BUF_SIZE];
@@ -22,7 +23,7 @@ void chat_task(esp_mqtt_client_handle_t mqtt_client)
             // Check for serial messages
             if (xQueueReceive(serial_msg_queue, &serial_msg, portMAX_DELAY))
             {
-                if (serial_msg[0] == ':' && serial_msg[1] == 's' && serial_msg[2] == ' ')
+                if (serial_msg[0] == ':' && (serial_msg[1] == 's' ||serial_msg[1] == 'S') && serial_msg[2] == ' ')
                 {
                     if (xSemaphoreTake(xSemaphore_mqtt_client, portMAX_DELAY) == pdTRUE)
                     {

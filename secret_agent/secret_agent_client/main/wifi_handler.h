@@ -16,6 +16,6 @@ typedef struct wifi_init_param_t
     char password[64];
 } wifi_init_param_t;
 
-void wifi_handler_start(wifi_init_param_t *param);
+void wifi_init_start(wifi_init_param_t *param);
 
 #endif

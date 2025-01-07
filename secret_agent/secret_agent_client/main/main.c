@@ -36,6 +36,8 @@ void app_main(void)
     esp_log_level_set("wifi", ESP_LOG_WARN); 
     PRINTFC_MAIN("Main is starting");
 
+    esp_log_level_set("wifi", ESP_LOG_ERROR);
+
     PRINTFC_MAIN("NVS Initialize");
     esp_err_t err = nvs_flash_init();
     if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND)
@@ -67,8 +69,8 @@ void app_main(void)
     
 
     PRINTFC_MAIN("Starting all tasks");
-    wifi_handler_start(&w_param);
-    server_start(&s_param);
+    wifi_init_start(&w_param);
+   // server_start(&s_param);
     client_start(&c_param);
     vTaskDelay(pdMS_TO_TICKS(1000));
     PRINTFC_MAIN("Main is done");

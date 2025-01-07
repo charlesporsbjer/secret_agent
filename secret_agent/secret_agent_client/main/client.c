@@ -9,21 +9,29 @@
 #include "chat.h"
 #include "freertos/queue.h"
 #include "shared_resources.h"
+#include "generate_csr.h"
 
-#define SERVER_URL "https://localhost:9191/spelare/register"
-#define CSR_ENDPOINT "https://localhost:9191/spelare/csr"
+//#define SERVER_URL "https://localhost:9191/spelare/register"
+//172.16.219.34
+#define CSR_ENDPOINT "https://" SERVER_IP ":9191/spelare/csr"
 
+#define SERVER_IP "172.16.219.34"   //patrik
+#define SERVER_URL "https://" SERVER_IP ":9191/spelare/register"
+#define SERVER_HANDSHAKE "https://" SERVER_IP ":9191/spelare"
+#define SERVER_START "https://" SERVER_IP ":9191/start"
 
-static void client_task(void *p)
+void client_task(void *p)
 {
-    //client_init_param_t *param = (client_init_param_t *)p;
-    PRINTFC_CLIENT("HELLO MY DUDE");
+    client_init_param_t *param = (client_init_param_t *)p;
+    PRINTFC_CLIENT("Client started and waiting for Wi-Fi to connect");
     // Wait for Wi-Fi to connect
     xEventGroupWaitBits(wifi_event_group, BIT0, pdFALSE, pdTRUE, portMAX_DELAY); // Wait for the Wi-Fi connected bit
 
-    PRINTFC_CLIENT("client is starting");
-
     // Start serial task
+    PRINTFC_CLIENT("Starting serial task");
+    xTaskCreate(serial_task, "serial task", 16384, NULL, 5, NULL);
+    PRINTFC_CLIENT("Returned from serial task");
+
   //  xTaskCreate(serial_task, "serial task", 8192, NULL, 5, NULL);
 
     // Register as a player
@@ -55,16 +63,64 @@ static void client_task(void *p)
 
     while (1)
     {
+
+        send_server_request();
+        PRINTFC_CLIENT("Client task  LOOP");
         // Periodic task or logic (e.g., game state updates, handling MQTT messages)
-        vTaskDelay(pdMS_TO_TICKS(1000)); // Adjust the delay as needed
+        vTaskDelay(pdMS_TO_TICKS(5000)); // Adjust the delay as needed
     }
 
     vTaskDelete(NULL);
 }
 
+void send_server_request(){
+
+    esp_http_client_config_t config = {
+        .url = SERVER_START,
+        .cert_pem = (const char*)ca_cert_pem_start,
+    };
+    
+
+    esp_http_client_handle_t client = esp_http_client_init(&config);
+
+    if (client == NULL) {
+        PRINTFC_CLIENT("Failed to initialize HTTP client\n");
+        return;
+    }
+    
+    esp_http_client_set_method(client, HTTP_METHOD_POST);
+    esp_err_t err = esp_http_client_perform(client);
+    
+    if (err == ESP_OK) {
+        PRINTFC_CLIENT("HTTP POST Status = %d, content_length = %lld\n",
+               esp_http_client_get_status_code(client),
+               esp_http_client_get_content_length(client));
+
+        // Handle response
+        char response[128];
+        int content_length = esp_http_client_read(client, response, sizeof(response) - 1);
+        if (content_length > 0) {
+            response[content_length] = '\0';
+            PRINTFC_CLIENT("Response: %s\n", response);
+
+            // Parse and store player ID if needed
+        }
+    } else {
+        PRINTFC_CLIENT("Error performing HTTP POST: %s\n", esp_err_to_name(err));
+    }
+
+}
+
+
+
+
+
 void client_start(client_init_param_t *param)
 {
-    xTaskCreate(client_task, "client task", 8192, param, 5, NULL);
+    void *p = (void *)param;
+    if (xTaskCreate(client_task, "client task", 16384, p, 5, NULL) != pdPASS) {
+        PRINTFC_CLIENT("Failed to create client task");
+    }
 }
 
 // Register ESP32 as a player
@@ -72,7 +128,9 @@ void register_player()
 {
     esp_http_client_config_t config = {
         .url = SERVER_URL,
-        .cert_pem = (const char*)server_cert_pem_start, // Server's certificate for verification
+        .cert_pem = (const char*)ca_cert_pem_start, // Server's certificate for verification
+        
+
     };
 
     esp_http_client_handle_t client = esp_http_client_init(&config);
@@ -108,9 +166,12 @@ void register_player()
 
 void send_csr(const char *csr)
 {
+    char csr[2048];
+    generate_csr(csr, sizeof(csr), "p1"); // Use the actual player ID
+
     esp_http_client_config_t config = {
         .url = CSR_ENDPOINT,
-        .cert_pem = (const char*)server_cert_pem_start,
+        .cert_pem = (const char*)ca_cert_pem_start     
     };
 
     esp_http_client_handle_t client = esp_http_client_init(&config);
@@ -139,8 +200,8 @@ void start_game()
     const char *json_payload = "{\"val\": \"nu kör vi\"}";
 
     esp_http_client_config_t config = {
-        .url = "https://localhost:9191/start",
-        .cert_pem = (const char*)server_cert_pem_start,
+        .url = SERVER_START,
+        .cert_pem = (const char*)ca_cert_pem_start,
     };
 
     esp_http_client_handle_t client = esp_http_client_init(&config);

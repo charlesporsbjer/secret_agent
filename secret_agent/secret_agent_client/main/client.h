@@ -13,7 +13,11 @@ typedef struct client_init_param_t {
 
 void client_start(client_init_param_t *param);
 
+
+
 void register_player();
+
+void send_server_request();
 
 void send_csr(const char *csr);
 
