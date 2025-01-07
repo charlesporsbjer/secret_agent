@@ -21,5 +21,14 @@ openssl genrsa -des3 -out cert/mqtt.key 2048
 openssl req -new -key cert/mqtt.key -out cert/mqtt.csr -subj "/C=SE/ST=Stockholm/L=Stockholm/O=Creekside AB/OU=Edu/CN=mqtt.creekside.se"
 
 ## generte certificate for mqtt
-openssl x509 -req -days 365 -in cert/mqtt.csr -CA cert/ca.crt -CAkey cert/ca.key -CAcreateserial -signkey cert/mqtt.key -out cert/mqtt.crt
+openssl x509 -req -days 365 -in cert/mqtt.csr -CA cert/ca.crt -CAkey cert/ca.key -CAcreateserial -out cert/mqtt.crt
 
+
+## generarte server key
+openssl genrsa -des3 -out cert/server.key 2048
+
+## generate sign request for server
+openssl req -new -key cert/server.key -out cert/server.csr -subj "/C=SE/ST=Stockholm/L=Stockholm/O=Creekside AB/OU=Edu/CN=server.creekside.se"
+
+## generte certificate for server
+openssl x509 -req -days 365 -in cert/server.csr -CA cert/ca.crt -CAkey cert/ca.key -CAcreateserial -out cert/server.crt

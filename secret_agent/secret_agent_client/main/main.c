@@ -12,6 +12,9 @@
 
 #define SERIAL_MSG_BUF_SIZE 1024
 
+char signed_certificate[2048];
+char player_id[32];
+
 SemaphoreHandle_t xSemaphore_wifi_event;
 SemaphoreHandle_t xSemaphore_serial;
 SemaphoreHandle_t xSemaphore_mqtt_evt;

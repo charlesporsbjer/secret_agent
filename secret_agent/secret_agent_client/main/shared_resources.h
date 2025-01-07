@@ -14,4 +14,7 @@ extern QueueHandle_t mqtt_event_queue;
 extern QueueHandle_t serial_msg_queue;
 extern EventGroupHandle_t wifi_event_group;
 
+extern char player_id[32];
+extern char signed_certificate[2048]; 
+
 #endif // SHARED_RESOURCES_H

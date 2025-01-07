@@ -11,11 +11,10 @@
 #include "shared_resources.h"
 #include "generate_csr.h"
 
-#define SERVER_IP "172.16.216.188" // Change this to the server IP address
+#define SERVER_IP "192.168.2.206" // Change this to the server IP address
 
 #define SERVER_URL          "https://" SERVER_IP ":9191"
-#define SERVER_SPELARE_URL  "https://" SERVER_IP ":9191/spelare"
-#define SERVER_REGISTER_URL "https://" SERVER_IP ":9191/spelare/register"
+#define SERVER_REGISTER_URL "https://" SERVER_IP ":9191/spelare"
 #define SERVER_START_URL    "https://" SERVER_IP ":9191/start"
 #define CSR_ENDPOINT        "https://" SERVER_IP ":9191/spelare/csr"
 
@@ -24,25 +23,25 @@ void client_task(void *p)
     client_init_param_t *param = (client_init_param_t *)p;
     PRINTFC_CLIENT("Client started and waiting for Wi-Fi to connect");
     // Wait for Wi-Fi to connect
-    xEventGroupWaitBits(wifi_event_group, BIT0, pdFALSE, pdTRUE, portMAX_DELAY); // Wait for the Wi-Fi connected bit
+    xEventGroupWaitBits(wifi_event_group, BIT0 | BIT1, pdFALSE, pdTRUE, portMAX_DELAY); // Wait for the Wi-Fi connected bit
 
     // Start serial task
     PRINTFC_CLIENT("Starting serial task");
     xTaskCreate(serial_task, "serial task", 16384, NULL, 5, NULL);
-    PRINTFC_CLIENT("Returned from serial task");
 
     // Register as a player
     register_player();
-    PRINTFC_CLIENT("Player registered");
+    PRINTFC_CLIENT("Player register request sent");
 
     // Generate and send CSR
     char csr[2048];
-    generate_csr(csr, sizeof(csr), "p1"); // Use the actual player ID
+    generate_csr(csr, sizeof(csr), player_id); // Use the actual player ID
     send_csr(csr);
     PRINTFC_CLIENT("CSR sent");
 
     // Start the game when ready
     start_game();
+    PRINTFC_CLIENT("Game start request sent");
 
     // Example MQTT initialization
     // Initialize the MQTT client and return the handle
@@ -76,6 +75,21 @@ void client_task(void *p)
 
 void client_start(client_init_param_t *param)
 {
+    PRINTFC_CLIENT("Client starting");
+    
+    // // Check if there is a connection to the server by sending a GET request to server URL
+    // PRINTFC_CLIENT("Server URL: %s", SERVER_URL);
+    // esp_http_client_config_t config = {
+    //     .url = SERVER_URL,
+    //     .cert_pem = (const char*)ca_server_copy, // Server's certificate for verification
+    //     .skip_cert_common_name_check = true,
+    // };
+    // if (esp_http_client_perform(esp_http_client_init(&config)) != ESP_OK) {
+    //     PRINTFC_CLIENT("Failed to connect to the server");
+    // } else {
+    //     PRINTFC_CLIENT("Connected to the server");
+    // }
+
     void *p = (void *)param;
     if (xTaskCreate(client_task, "client task", 16384, p, 5, NULL) != pdPASS) {
         PRINTFC_CLIENT("Failed to create client task");
@@ -85,9 +99,14 @@ void client_start(client_init_param_t *param)
 // Register ESP32 as a player
 void register_player()
 {
+    PRINTFC_CLIENT("ca_server_copy: %s", (const char*)ca_server_copy);
+    PRINTFC_CLIENT("Register URL: %s", SERVER_REGISTER_URL);
     esp_http_client_config_t config = {
-        .url = SERVER_URL,
-        .cert_pem = (const char*)server_cert_pem_start, // Server's certificate for verification
+        .url = SERVER_REGISTER_URL,
+        .cert_pem = (const char*)ca_server_copy, // Server's certificate for verification
+        .skip_cert_common_name_check = true,
+        //.common_name = "http.creekside.se",
+        .auth_type = HTTP_AUTH_TYPE_NONE,
     };
 
     esp_http_client_handle_t client = esp_http_client_init(&config);
@@ -102,8 +121,8 @@ void register_player()
 
     if (err == ESP_OK) {
         PRINTFC_CLIENT("HTTP POST Status = %d, content_length = %lld",
-               esp_http_client_get_status_code(client),
-               esp_http_client_get_content_length(client));
+                       esp_http_client_get_status_code(client),
+                       esp_http_client_get_content_length(client));
 
         // Handle response
         char response[128];
@@ -112,7 +131,29 @@ void register_player()
             response[content_length] = '\0';
             PRINTFC_CLIENT("Response: %s", response);
 
-            // Parse and store player ID if needed
+            // Parse and store player ID json string
+            char *player_id_start = strstr(response, "\"id\": \"");
+            if (player_id_start) {
+                player_id_start += strlen("\"id\": \"");
+                char *player_id_end = strstr(player_id_start, "\"");
+                if (player_id_end) {
+                    int player_id_len = player_id_end - player_id_start;
+                    if (player_id_len < sizeof(player_id)) {
+                        memset(player_id, 0, sizeof(player_id));
+                        strncpy(player_id, player_id_start, player_id_len);
+                        player_id[player_id_len] = '\0'; // Ensure null-termination
+                        PRINTFC_CLIENT("Player ID: %s", player_id);
+                    } else {
+                        PRINTFC_CLIENT("Error: Player ID buffer too small");
+                    }
+                } else {
+                    PRINTFC_CLIENT("Error: Missing end quote for player ID");
+                }
+            } else {
+                PRINTFC_CLIENT("Error: No player ID found in response");
+            }
+        } else {
+            PRINTFC_CLIENT("Error reading response or no content");
         }
     } else {
         PRINTFC_CLIENT("Error performing HTTP POST: %s", esp_err_to_name(err));
@@ -121,41 +162,89 @@ void register_player()
     esp_http_client_cleanup(client);
 }
 
+
 void send_csr(const char *csr)
 {
+    PRINTFC_CLIENT("CSR URL: %s", CSR_ENDPOINT);
     esp_http_client_config_t config = {
         .url = CSR_ENDPOINT,
-        .cert_pem = (const char*)server_cert_pem_start,
+        .cert_pem = (const char *)ca_server_copy,
+        //.skip_cert_common_name_check = true, // For testing only; remove in production
+        .common_name = player_id,
     };
 
     esp_http_client_handle_t client = esp_http_client_init(&config);
-
     if (client == NULL) {
         PRINTFC_CLIENT("Failed to initialize HTTP client");
         return;
     }
 
+    // Configure HTTP method and payload
     esp_http_client_set_method(client, HTTP_METHOD_POST);
     esp_http_client_set_post_field(client, csr, strlen(csr));
-    esp_err_t err = esp_http_client_perform(client);
 
+    // Perform the HTTP request
+    esp_err_t err = esp_http_client_perform(client);
     if (err == ESP_OK) {
         PRINTFC_CLIENT("CSR submitted successfully.");
-        // Handle server response if needed (signed certificate)
+        PRINTFC_CLIENT("HTTP Status = %d, Content-Length = %" PRId64,
+                       esp_http_client_get_status_code(client),
+                       esp_http_client_get_content_length(client));
+
+        // Handle the server response
+        char response[2048];
+        int content_length = esp_http_client_read(client, response, sizeof(response) - 1);
+        if (content_length > 0) {
+            response[content_length] = '\0'; // Null-terminate the response
+            PRINTFC_CLIENT("Response: %s", response);
+
+            // Parse the signed certificate from the response
+            char *cert_start = strstr(response, "-----BEGIN CERTIFICATE-----");
+            if (cert_start) {
+                char *cert_end = strstr(cert_start, "-----END CERTIFICATE-----");
+                if (cert_end) {
+                    cert_end += strlen("-----END CERTIFICATE-----"); // Move to the end of the certificate
+
+                    int cert_len = cert_end - cert_start;
+                    if (cert_len < sizeof(signed_certificate)) {
+                        memset(signed_certificate, 0, sizeof(signed_certificate));
+                        strncpy(signed_certificate, cert_start, cert_len);
+                        signed_certificate[cert_len] = '\0'; // Ensure null-termination
+
+                        PRINTFC_CLIENT("Signed certificate: %s", signed_certificate);
+
+                        // Signal that the signed certificate has been received
+                        xEventGroupSetBits(wifi_event_group, BIT2);
+                    } else {
+                        PRINTFC_CLIENT("Error: Signed certificate buffer too small");
+                    }
+                } else {
+                    PRINTFC_CLIENT("Error: Missing 'END CERTIFICATE' marker");
+                }
+            } else {
+                PRINTFC_CLIENT("Error: No certificate found in the response");
+            }
+        } else {
+            PRINTFC_CLIENT("Error: Failed to read server response");
+        }
     } else {
         PRINTFC_CLIENT("Error sending CSR: %s", esp_err_to_name(err));
     }
 
+    // Clean up the HTTP client
     esp_http_client_cleanup(client);
 }
 
+
 void start_game()
 {
+    PRINTFC_CLIENT("Game start URL: %s", SERVER_START_URL);
     const char *json_payload = "{\"val\": \"nu kör vi\"}";
 
     esp_http_client_config_t config = {
         .url = SERVER_START_URL,
-        .cert_pem = (const char*)server_cert_pem_start,
+        .cert_pem = (const char*)signed_certificate,
+        .skip_cert_common_name_check = true,
     };
 
     esp_http_client_handle_t client = esp_http_client_init(&config);

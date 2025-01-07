@@ -10,3 +10,5 @@ user superuser
 topic readwrite hello/+/world
 
 pattern readwrite hello/%u/world
+
+pattern readwrite /myndigheten

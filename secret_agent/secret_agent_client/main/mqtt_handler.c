@@ -1,8 +1,9 @@
 #include "mqtt_handler.h"
 #include "printer_helper.h"
 #include "certs.h"
+#include "shared_resources.h"
 
-#define BROKER_IP "172.20.80.1"
+#define BROKER_IP "172.16.216.188"
 #define MQTT_BROKER_URI "mqtts://" BROKER_IP ":8883"
 
 static void log_error_if_nonzero(const char *message, int error_code)
@@ -67,10 +68,12 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 // Initialize MQTT Client
 esp_mqtt_client_handle_t mqtt_app_start()
 {
+    xEventGroupWaitBits(wifi_event_group, BIT0 | BIT1 | BIT2, pdFALSE, pdTRUE, portMAX_DELAY);
     PRINTFC_MQTT("MQTT app starting");
     const esp_mqtt_client_config_t mqtt_cfg = {
         .broker.address.uri = MQTT_BROKER_URI,
-        .broker.verification.certificate = (const char *)server_cert_pem_start,
+        .broker.verification.certificate = (const char *)ca_server_copy,
+        .broker.verification.skip_cert_common_name_check = true,
         .credentials = {
             .authentication = {
             .certificate = (const char *)client_cert_pem_start,

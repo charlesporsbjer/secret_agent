@@ -15,5 +15,7 @@ extern const uint8_t ca_cert_end[] asm("_binary_ca_crt_end");
 extern const uint8_t ca_key_start[] asm("_binary_ca_key_start");
 extern const uint8_t ca_key_end[] asm("_binary_ca_key_end");
 
+extern const uint8_t ca_server_copy[] asm("_binary_ca_server_copy_crt_start");
+
 
 #endif

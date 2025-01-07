@@ -18,6 +18,7 @@ COPY cert cert
 COPY names.txt names.txt
 COPY --from=build-stage /server /server
 
+EXPOSE 9191
 EXPOSE 8883
 
 ENTRYPOINT [ "/server" ]
