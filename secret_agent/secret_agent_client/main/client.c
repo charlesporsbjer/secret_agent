@@ -18,9 +18,8 @@
 //#define SERVER_IP "172.16.219.34"   //patrik
 #define SERVER_IP "192.168.0.127" //HEMMA
 #define SERVER_REGISTER "https://" SERVER_IP ":9191/spelare/register"
-#define SERVER_HANDSHAKE "https://" SERVER_IP ":9191/spelare"
 #define SERVER_START "https://" SERVER_IP ":9191/start"
-#define SERVER_TEST "https://" SERVER_IP ":9191/test"
+#define SERVER_TEST "https://" SERVER_IP ":9191/spelare/test"
 #define SERVER_URL "https://" SERVER_IP ":9191/spelare/register"
 
 void client_task(void *p)
@@ -54,7 +53,6 @@ void client_task(void *p)
 
     while (1)
     {
-
         send_server_request();
         PRINTFC_CLIENT("Client task  LOOP");
         // Periodic task or logic (e.g., game state updates, handling MQTT messages)
@@ -69,32 +67,28 @@ void send_server_request(){
     esp_http_client_config_t config = {
         .url = SERVER_TEST,
         .cert_pem = (const char*)ca_cert_pem_start,
-    };
+        .skip_cert_common_name_check = false,
+            };
     
 
     esp_http_client_handle_t client = esp_http_client_init(&config);
 
-    if (client == NULL) {
-        PRINTFC_CLIENT("Failed to initialize HTTP client\n");
-        return;
-    }
-    
-    esp_http_client_set_method(client, HTTP_METHOD_POST);
+  esp_http_client_set_method(client, HTTP_METHOD_POST);
+
+    // Perform the HTTP request
     esp_err_t err = esp_http_client_perform(client);
     
     if (err == ESP_OK) {
         PRINTFC_CLIENT("HTTP POST Status = %d, content_length = %lld\n",
-               esp_http_client_get_status_code(client),
-               esp_http_client_get_content_length(client));
+                       esp_http_client_get_status_code(client),
+                       esp_http_client_get_content_length(client));
 
-        // Handle response
+        // Handle the response
         char response[128];
         int content_length = esp_http_client_read(client, response, sizeof(response) - 1);
         if (content_length > 0) {
             response[content_length] = '\0';
             PRINTFC_CLIENT("Response: %s\n", response);
-
-            // Parse and store player ID if needed
         }
     } else {
         PRINTFC_CLIENT("Error performing HTTP POST: %s\n", esp_err_to_name(err));

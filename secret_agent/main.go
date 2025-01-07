@@ -2,27 +2,40 @@ package main
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 )
 
 func main() {
-	// Load server certificates
-	cert, err := tls.LoadX509KeyPair("./go_cert/ca.crt", "./go_cert/ca.key")
+
+	serverCert, err := tls.LoadX509KeyPair("./go_cert/server.crt", "./go_cert/server.key")
 	if err != nil {
-		log.Fatalf("Failed to load certificate and key pair: %v", err)
+		log.Fatalf("Failed to load server certificate: %v", err)
 	}
 
-	// Print details of the loaded certificate
-	fmt.Printf("Certificate loaded")
+	certPool := x509.NewCertPool()
 
-	// Now you can use this cert in a TLS server or client
-	// For example, to start an HTTPS server:
+	caCert, err := os.ReadFile("./go_cert/ca.crt")
+	if err != nil {
+		log.Fatalf("Failed to read CA certificate: %v", err)
+	}
+
+	certPool.AppendCertsFromPEM(caCert)
+	tlsConfig := &tls.Config{
+		ClientCAs:    certPool,
+		ClientAuth:   tls.VerifyClientCertIfGiven,
+		Certificates: []tls.Certificate{serverCert},
+	}
 	server := &http.Server{
 		Addr:      ":9191",
-		TLSConfig: &tls.Config{Certificates: []tls.Certificate{cert}},
+		Handler:   http.DefaultServeMux,
+		TLSConfig: tlsConfig,
 	}
+
+	http.HandleFunc("/spelare/test", clientTestHandler)
 
 	// // Register endpoints
 	//http.HandleFunc("/spelare/register", playerRegistrationHandler)
@@ -30,12 +43,8 @@ func main() {
 	// http.HandleFunc("/spelare/csr", playerCSRHandler)
 	// http.HandleFunc("/start", startGameHandler)
 
-	fmt.Println("Server is running on https://localhost:9191")
-	if err := server.ListenAndServeTLS("", ""); err != nil {
-		log.Fatalf("Server failed: %v", err)
-	}
+	server.ListenAndServeTLS("", "")
 
-	http.HandleFunc("/spelare/test", clientTestHandler)
 	// Register endpoints
 	// http.HandleFunc("/spelare/register", playerRegistrationHandler)
 	// http.HandleFunc("/spelare/csr", playerCSRHandler)
