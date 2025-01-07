@@ -12,11 +12,12 @@ import (
 	"io"
 	"log"
 	"math/big"
-	mathrand "math/rand"
 	"net/http"
 	"os"
 	"sync"
 	"time"
+
+	mathrand "math/rand"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
@@ -50,37 +51,54 @@ func init() {
 }
 
 func main() {
-	mqttOpts := mqtt.NewClientOptions().AddBroker("tcp://localhost:1883").SetClientID("server")
+	mqttOpts := mqtt.NewClientOptions().AddBroker("mqtt://mosquitto:8883").SetClientID("server").SetPassword("passwd")
 	mqttClient = mqtt.NewClient(mqttOpts)
 
 	if token := mqttClient.Connect(); token.Wait() && token.Error() != nil {
 		log.Fatalf("Failed to connect to MQTT broker: %v", token.Error())
+	} else {
+		log.Println("Connected to MQTT broker")
 	}
 
-	log.Println("Connected to MQTT broker")
+	t := mqttClient.Subscribe("/myndigheten", 0, func(client mqtt.Client, msg mqtt.Message) {
+		log.Printf("Received message: %s\n", msg.Payload())
+	})
+	t.Wait()
+	if t.Error() != nil {
+		log.Fatalf("Failed to subscribe to /myndigheten: %v", t.Error())
+	}
 
-	cert, err := tls.LoadX509KeyPair("./go_cert/go_server.crt", "./go_cert/go_server.key")
+	cert, err := tls.LoadX509KeyPair("/cert/http.crt", "/cert/http.key")
 	if err != nil {
 		log.Fatalf("Failed to load server certificates: %v", err)
 	}
 
+	certPool := x509.NewCertPool()
+	caCert, err := os.ReadFile("/cert/ca.crt")
+	if err != nil {
+		log.Fatalf("Failed to read CA certificate: %v", err)
+	}
+
+	certPool.AppendCertsFromPEM(caCert)
+
 	tlsConfig := &tls.Config{
 		Certificates: []tls.Certificate{cert},
-		ClientAuth:   tls.NoClientCert,
-		MinVersion:   tls.VersionTLS12,
+		ClientAuth:   tls.VerifyClientCertIfGiven,
+		ClientCAs:    certPool,
 	}
 
 	server := &http.Server{
 		Addr:      ":9191",
+		Handler:   http.DefaultServeMux,
 		TLSConfig: tlsConfig,
 	}
 
-	http.HandleFunc("/spelare/register", playerRegistrationHandler)
+	http.HandleFunc("/spelare", playerRegistrationHandler)
 	http.HandleFunc("/spelare/csr", playerCSRHandler)
 	http.HandleFunc("/start", startGameHandler)
 
 	fmt.Println("Server is running on https://localhost:9191")
-	if err := server.ListenAndServeTLS("./go_cert/go_server.crt", "./go_cert/go_server.key"); err != nil {
+	if err := server.ListenAndServeTLS("", ""); err != nil {
 		log.Fatalf("Server failed: %v", err)
 	}
 }

@@ -1,0 +1,8 @@
+{
+    "idf.espIdfPathWin": "C:\\Users\\maple\\esp\\v5.3\\esp-idf",
+    "idf.toolsPathWin": "C:\\Users\\maple\\.espressif",
+    "idf.openOcdConfigs": [
+        "board/esp32c6-ftdi.cfg"
+    ],
+    "idf.portWin": "COM10"
+}

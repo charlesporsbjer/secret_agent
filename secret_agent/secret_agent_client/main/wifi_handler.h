@@ -4,7 +4,6 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
 
-
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_HAS_IP_BIT BIT1
 #define WIFI_RECONNECT_MAX_ATTEMPT 100

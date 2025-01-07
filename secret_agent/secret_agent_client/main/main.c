@@ -12,6 +12,9 @@
 
 #define SERIAL_MSG_BUF_SIZE 1024
 
+char signed_certificate[2048];
+char player_id[32];
+
 SemaphoreHandle_t xSemaphore_wifi_event;
 SemaphoreHandle_t xSemaphore_serial;
 SemaphoreHandle_t xSemaphore_mqtt_evt;
@@ -67,7 +70,7 @@ void app_main(void)
 
     PRINTFC_MAIN("Starting all tasks");
     wifi_handler_start(&w_param);
-    server_start(&s_param);
+    //server_start(&s_param);
     client_start(&c_param);
     PRINTFC_MAIN("Main is done");
 }
