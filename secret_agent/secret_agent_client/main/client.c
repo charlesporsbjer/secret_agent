@@ -16,7 +16,7 @@
 #define CSR_ENDPOINT "https://" SERVER_IP ":9191/spelare/csr"
 
 //#define SERVER_IP "172.16.219.34"   //patrik
-#define SERVER_IP "192.168.0.127" //HEMMA
+#define SERVER_IP "localhost" //HEMMA
 #define SERVER_REGISTER "https://" SERVER_IP ":9191/spelare/register"
 #define SERVER_START "https://" SERVER_IP ":9191/start"
 #define SERVER_TEST "https://" SERVER_IP ":9191/spelare/test"
