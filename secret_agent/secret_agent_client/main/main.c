@@ -66,8 +66,8 @@ void app_main(void)
     xSemaphore_mqtt_client = xSemaphoreCreateMutex();
 
     PRINTFC_MAIN("Starting all tasks");
-    wifi_handler_start(&w_param);
-    server_start(&s_param);
+    wifi_init_start(&w_param);
+   // server_start(&s_param);
     client_start(&c_param);
     PRINTFC_MAIN("Main is done");
 }

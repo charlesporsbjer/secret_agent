@@ -14,7 +14,7 @@
 //#define SERVER_URL "https://localhost:9191/spelare/register"
 //172.16.219.34
 #define CSR_ENDPOINT "https://" SERVER_IP ":9191/spelare/csr"
-//#define SERVER_IP "172.16.216.46"  charlie
+
 #define SERVER_IP "172.16.219.34"   //patrik
 #define SERVER_URL "https://" SERVER_IP ":9191/spelare/register"
 #define SERVER_HANDSHAKE "https://" SERVER_IP ":9191/spelare"
@@ -32,20 +32,9 @@ void client_task(void *p)
     xTaskCreate(serial_task, "serial task", 16384, NULL, 5, NULL);
     PRINTFC_CLIENT("Returned from serial task");
 
-    // Register as a player
-   // register_player();
-    PRINTFC_CLIENT("Player registered");
-
-    // Generate and send CSR
-    char csr[2048];
-   // generate_csr(csr, sizeof(csr), "p1"); // Use the actual player ID
-   // send_csr(csr);
-    PRINTFC_CLIENT("CSR sent");
-
 
     while (1)
     {
-
 
         send_server_request();
         PRINTFC_CLIENT("Client task  LOOP");
@@ -149,6 +138,9 @@ void register_player()
 
 void send_csr(const char *csr)
 {
+    char csr[2048];
+    generate_csr(csr, sizeof(csr), "p1"); // Use the actual player ID
+
     esp_http_client_config_t config = {
         .url = CSR_ENDPOINT,
         .cert_pem = (const char*)ca_cert_pem_start     
