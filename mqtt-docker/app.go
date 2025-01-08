@@ -151,6 +151,7 @@ func playerRegistrationHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "No more player IDs available", http.StatusInternalServerError)
 		return
 	}
+	playerCertificates[playerID] = playerID
 
 	response := fmt.Sprintf(`{"id": "%s"}`, playerID)
 	w.Header().Set("Content-Type", "application/json")
@@ -171,9 +172,17 @@ func playerCSRHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	csr, err := x509.ParseCertificateRequest(csrBytes)
+	block, _ := pem.Decode(csrBytes)
+	if block == nil || block.Type != "CERTIFICATE REQUEST" {
+		http.Error(w, "Failed to decode PEM block containing CSR", http.StatusBadRequest)
+		log.Println("Failed to decode PEM block containing CSR")
+		return
+	}
+
+	csr, err := x509.ParseCertificateRequest(block.Bytes)
 	if err != nil {
-		http.Error(w, "Invalid CSR format", http.StatusBadRequest)
+		http.Error(w, "Invalid CSR format: \n"+string(csrBytes), http.StatusBadRequest)
+		log.Println(err)
 		return
 	}
 

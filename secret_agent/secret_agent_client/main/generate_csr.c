@@ -2,7 +2,7 @@
 #include "printer_helper.h"
 #include "string.h"
 
-int generate_csr(char *csr_buf, size_t csr_buf_size, const char *subject_name)
+int generate_csr(char *csr_buf, size_t csr_buf_size, const char *player_id)
 {
     int ret;
     mbedtls_pk_context key;
@@ -11,24 +11,30 @@ int generate_csr(char *csr_buf, size_t csr_buf_size, const char *subject_name)
     mbedtls_ctr_drbg_context ctr_drbg;
     const char *pers = "csr_gen";
 
+    char subject_name[256];
+
+    // Format the subject name with the player ID
+    snprintf(subject_name, sizeof(subject_name), "CN=%s,O=csr.chawp.com,C=SE", player_id);
+    
     mbedtls_pk_init(&key);
     mbedtls_x509write_csr_init(&req);
     mbedtls_entropy_init(&entropy);
     mbedtls_ctr_drbg_init(&ctr_drbg);
 
+
     if ((ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (const unsigned char *)pers, strlen(pers))) != 0) {
-        PRINTFC_CLIENT("mbedtls_ctr_drbg_seed returned -0x%04x\n", -ret);
+        PRINTFC_CSR("mbedtls_ctr_drbg_seed returned -0x%04x\n", -ret);
         goto exit;
     }
 
     // Generate a key pair
     if ((ret = mbedtls_pk_setup(&key, mbedtls_pk_info_from_type(MBEDTLS_PK_RSA))) != 0) {
-        PRINTFC_CLIENT("mbedtls_pk_setup returned -0x%04x\n", -ret);
+        PRINTFC_CSR("mbedtls_pk_setup returned -0x%04x\n", -ret);
         goto exit;
     }
 
     if ((ret = mbedtls_rsa_gen_key(mbedtls_pk_rsa(key), mbedtls_ctr_drbg_random, &ctr_drbg, 2048, 65537)) != 0) {
-        PRINTFC_CLIENT("mbedtls_rsa_gen_key returned -0x%04x\n", -ret);
+        PRINTFC_CSR("mbedtls_rsa_gen_key returned -0x%04x\n", -ret);
         goto exit;
     }
 
@@ -36,12 +42,12 @@ int generate_csr(char *csr_buf, size_t csr_buf_size, const char *subject_name)
     mbedtls_x509write_csr_set_key(&req, &key);
 
     if ((ret = mbedtls_x509write_csr_set_subject_name(&req, subject_name)) != 0) {
-        PRINTFC_CLIENT("mbedtls_x509write_csr_set_subject_name returned -0x%04x\n", -ret);
+        PRINTFC_CSR("mbedtls_x509write_csr_set_subject_name returned -0x%04x\n", -ret);
         goto exit;
     }
 
     if ((ret = mbedtls_x509write_csr_pem(&req, (unsigned char *)csr_buf, csr_buf_size, mbedtls_ctr_drbg_random, &ctr_drbg)) < 0) {
-        PRINTFC_CLIENT("mbedtls_x509write_csr_pem returned -0x%04x\n", -ret);
+        PRINTFC_CSR("mbedtls_x509write_csr_pem returned -0x%04x\n", -ret);
         goto exit;
     }
 
