@@ -5,6 +5,7 @@ import (
 	"crypto/x509"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 )
@@ -44,6 +45,7 @@ func main() {
 
 	// // Register endpoints
 	//http.HandleFunc("/spelare/register", playerRegistrationHandler)
+	http.HandleFunc("/spelare/register", playerRegistrationHandler)
 
 	// http.HandleFunc("/spelare/csr", playerCSRHandler)
 	// http.HandleFunc("/start", startGameHandler)
@@ -55,6 +57,11 @@ func main() {
 	// http.HandleFunc("/spelare/csr", playerCSRHandler)
 	// http.HandleFunc("/start", startGameHandler)
 
+}
+
+func assignPlayerID_DEBUG() string {
+	ids := []string{"12345", "52914", "22005"}
+	return ids[rand.Intn(len(ids))]
 }
 
 func clientTestHandler(w http.ResponseWriter, r *http.Request) {
@@ -74,7 +81,7 @@ func playerRegistrationHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		return
 	}
-	playerID := "1234"
+	playerID := assignPlayerID_DEBUG()
 	response := fmt.Sprintf(`{"id": "%s"}`, playerID)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
