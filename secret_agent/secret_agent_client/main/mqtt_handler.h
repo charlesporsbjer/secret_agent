@@ -5,4 +5,6 @@
 
 esp_mqtt_client_handle_t mqtt_app_start();
 
+void mqtt_message_handler(void *event_data);
+
 #endif

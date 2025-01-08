@@ -14,6 +14,7 @@ import (
 	"math/big"
 	"net/http"
 	"os"
+	"path"
 	"sync"
 	"time"
 
@@ -93,6 +94,10 @@ func main() {
 		TLSConfig: tlsConfig,
 	}
 
+	mqttClient.Subscribe("/torget", 0, nil)
+	mqttClient.Subscribe("/spelare/+/uplink", 0, nil)
+	mqttClient.Subscribe("/myndigheten", 0, nil)
+
 	http.HandleFunc("/spelare", playerRegistrationHandler)
 	http.HandleFunc("/spelare/csr", playerCSRHandler)
 	http.HandleFunc("/start", startGameHandler)
@@ -137,6 +142,49 @@ func selectUniqueName() (string, error) {
 
 	usedNames[selectedName] = true
 	return selectedName, nil
+}
+
+func messageHandler(client mqtt.Client, msg mqtt.Message) {
+	topic := msg.Topic()
+	payload := msg.Payload()
+
+	switch {
+	case topic == "/torget":
+		handleTorgetMessage(payload)
+	case topic == "/myndigheten":
+		handleMyndighetenMessage(payload)
+	default:
+		if match, _ := path.Match("/spelare/*/uplink", topic); match {
+			handleUplinkMessage(topic, payload)
+		}
+	}
+}
+
+func handleTorgetMessage(payload []byte) {
+	var message map[string]interface{}
+	if err := json.Unmarshal(payload, &message); err != nil {
+		log.Printf("Failed to unmarshal /torget message: %v", err)
+		return
+	}
+	log.Printf("Received /torget message: %v", message)
+}
+
+func handleMyndighetenMessage(payload []byte) {
+	var message map[string]interface{}
+	if err := json.Unmarshal(payload, &message); err != nil {
+		log.Printf("Failed to unmarshal /myndigheten message: %v", err)
+		return
+	}
+	log.Printf("Received /myndigheten message: %v", message)
+}
+
+func handleUplinkMessage(topic string, payload []byte) {
+	var message map[string]interface{}
+	if err := json.Unmarshal(payload, &message); err != nil {
+		log.Printf("Failed to unmarshal uplink message: %v", err)
+		return
+	}
+	log.Printf("Received uplink message on topic %s: %v", topic, message)
 }
 
 func playerRegistrationHandler(w http.ResponseWriter, r *http.Request) {
