@@ -10,3 +10,4 @@ project(tls)
 
 target_add_binary_data(${CMAKE_PROJECT_NAME}.elf "cert/ca.crt" BINARY)
 
+

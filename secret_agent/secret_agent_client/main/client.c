@@ -54,7 +54,7 @@ void client_task(void *p)
     while (1)
     {
         send_server_request();
-        PRINTFC_CLIENT("Client task  LOOP");
+    
         // Periodic task or logic (e.g., game state updates, handling MQTT messages)
         vTaskDelay(pdMS_TO_TICKS(5000)); // Adjust the delay as needed
     }
@@ -64,36 +64,55 @@ void client_task(void *p)
 
 void send_server_request(){
 
-    esp_http_client_config_t config = {
-        .url = SERVER_TEST,
-        .cert_pem = (const char*)ca_cert_pem_start,
-        .skip_cert_common_name_check = false,
-            };
+        esp_http_client_config_t config = {
+            .url = SERVER_TEST,
+            .cert_pem = (const char*)ca_cert_pem_start,
+            .timeout_ms = 10000,
+        // .skip_cert_common_name_check = false,
+                };
+        
+
+        esp_http_client_handle_t client = esp_http_client_init(&config);
+
+        esp_http_client_set_method(client, HTTP_METHOD_POST);
+
+        // Perform the HTTP request
+        esp_err_t err = esp_http_client_perform(client);
+
+
     
+        int content_length = esp_http_client_get_content_length(client);
 
-    esp_http_client_handle_t client = esp_http_client_init(&config);
 
-  esp_http_client_set_method(client, HTTP_METHOD_POST);
+        
+        
+        if (err == ESP_OK) {
+            PRINTFC_CLIENT("HTTP POST Status = %d, content_length = %lld\n",
+                            esp_http_client_get_status_code(client),
+                            esp_http_client_get_content_length(client));
+                
+                
+                    char buffer[512]; // Adjust the size based on expected response size
+                    int read_len = esp_http_client_read(client, buffer, content_length);
+        
+            if (content_length > 0) {
+                buffer[read_len] = '\0';
+                printf("Response: %s\n", buffer);
 
-    // Perform the HTTP request
-    esp_err_t err = esp_http_client_perform(client);
-    
-    if (err == ESP_OK) {
-        PRINTFC_CLIENT("HTTP POST Status = %d, content_length = %lld\n",
-                       esp_http_client_get_status_code(client),
-                       esp_http_client_get_content_length(client));
+                printf("Raw response (hex): ");
+                    for (int i = 0; i < read_len; i++) {
+                        printf("%02X ", buffer[i]);
+                    }
+                    printf("\n");                
+            
+            } else {
+            PRINTFC_CLIENT("Error performing HTTP POST: %s\n", esp_err_to_name(err));
+            }
 
-        // Handle the response
-        char response[128];
-        int content_length = esp_http_client_read(client, response, sizeof(response) - 1);
-        if (content_length > 0) {
-            response[content_length] = '\0';
-            PRINTFC_CLIENT("Response: %s\n", response);
-        }
-    } else {
-        PRINTFC_CLIENT("Error performing HTTP POST: %s\n", esp_err_to_name(err));
+
+        esp_http_client_cleanup(client);
+
     }
-
 }
 
 
@@ -113,9 +132,7 @@ void register_player()
 {
     esp_http_client_config_t config = {
         .url = SERVER_URL,
-        .cert_pem = (const char*)ca_cert_pem_start, // Server's certificate for verification
-        
-
+        //.cert_pem = (const char*)ca_cert_pem_start, // Server's certificate for verification
     };
 
     esp_http_client_handle_t client = esp_http_client_init(&config);
