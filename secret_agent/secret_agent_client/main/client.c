@@ -23,6 +23,8 @@
 #define MAX_HTTP_RECV_BUFFER 2048
 #define MAX_HTTP_OUTPUT_BUFFER 2048
 
+esp_mqtt_client_handle_t mqtt_client;
+
 esp_err_t _http_event_handler(esp_http_client_event_t *evt) {
     static char *output_buffer;  // Buffer to store response of http request from event handler
     static int output_len;      // Stores number of bytes read
@@ -185,7 +187,7 @@ void client_task(void *p)
 
     // Example MQTT initialization
     // Initialize the MQTT client and return the handle
-    esp_mqtt_client_handle_t mqtt_client = mqtt_app_start();
+    mqtt_client = mqtt_app_start();
     if (mqtt_client) {
         if (xSemaphoreTake(xSemaphore_mqtt_client, portMAX_DELAY) == pdTRUE) {
             PRINTFC_CLIENT("MQTT client initialized successfully.");
@@ -232,8 +234,8 @@ void register_player()
         .url = SERVER_REGISTER_URL,
         .cert_pem = (const char*)ca_server_copy, // Server's certificate for verification
         .skip_cert_common_name_check = true,
-        .timeout_ms = 10000, // Increase timeout to 10 seconds
         .event_handler = _http_event_handler,
+        .timeout_ms = 10000, // Increase timeout to 10 seconds
     };
 
     esp_http_client_handle_t client = esp_http_client_init(&config);
@@ -261,6 +263,7 @@ void send_csr(const char *csr)
         .skip_cert_common_name_check = true, // For testing only; remove in production
         .common_name = player_id,
         .event_handler = _http_event_handler,
+        .timeout_ms = 10000, // Increase timeout to 10 seconds
     };
 
     esp_http_client_handle_t client = esp_http_client_init(&config);

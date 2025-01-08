@@ -2,10 +2,12 @@
 #include "printer_helper.h"
 #include "string.h"
 
+uint8_t key_pem[2048];
+
 int generate_csr(char *csr_buf, size_t csr_buf_size, const char *player_id)
 {
     int ret;
-    mbedtls_pk_context key;
+    mbedtls_pk_context key;    
     mbedtls_x509write_csr req;
     mbedtls_entropy_context entropy;
     mbedtls_ctr_drbg_context ctr_drbg;
@@ -51,6 +53,11 @@ int generate_csr(char *csr_buf, size_t csr_buf_size, const char *player_id)
         goto exit;
     }
 
+    // Write the key to PEM format
+    if ((ret = mbedtls_pk_write_key_pem(&key, key_pem, sizeof(key_pem))) != 0) {
+        PRINTFC_CLIENT("Failed to write key to PEM format: -0x%04x", -ret);
+        goto exit;
+    }
     ret = 0; // Success
 
 exit:
