@@ -13,6 +13,20 @@ static const char *cyan = "\033[0;36m";
 static const char *white = "\033[0;37m";
 static const char *reset = "\033[0m";
 
+static void use_colors(void)
+{
+    // Fake use of color variables to avoid warnings
+    (void)black;
+    (void)red;
+    (void)green;
+    (void)yellow;
+    (void)blue;
+    (void)magenta;
+    (void)cyan;
+    (void)white;
+    (void)reset;
+}
+
 #define PRINTFC(color, format, ...) printf("%s" format "%s", color, ##__VA_ARGS__, reset)
 
 #define PRINTFC_SERVER(format, ...) \
@@ -67,6 +81,11 @@ static const char *reset = "\033[0m";
 
 #define PRINTFC_TORGET(format, ...) \
     PRINTFC(blue, "Torget: ");      \
+    printf(format, ##__VA_ARGS__);  \
+    printf("\n")
+
+#define PRINTFC_CSR(format, ...)    \
+    PRINTFC(yellow, "CSR: ");       \
     printf(format, ##__VA_ARGS__);  \
     printf("\n")
 

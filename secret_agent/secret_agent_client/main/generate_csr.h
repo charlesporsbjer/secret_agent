@@ -7,6 +7,6 @@
 #include "mbedtls/ctr_drbg.h"
 #include "mbedtls/error.h"
 
-int generate_csr(char *csr_buf, size_t csr_buf_size, const char *subject_name);
+int generate_csr(char *csr_buf, size_t csr_buf_size, const char *player_id);
 
 #endif
