@@ -15,7 +15,7 @@
 //172.16.219.34
 #define CSR_ENDPOINT "https://" SERVER_IP ":9191/spelare/csr"
 
-#define SERVER_IP "127.0.0.1"   //patrik
+#define SERVER_IP "172.16.217.186"   //patrik
 //#define SERVER_IP "192.168.0.127" //HEMMA
 #define SERVER_REGISTER "https://" SERVER_IP ":9191/spelare/register"
 #define SERVER_START "https://" SERVER_IP ":9191/start"
@@ -27,7 +27,7 @@ void client_task(void *p)
     client_init_param_t *param = (client_init_param_t *)p;
     PRINTFC_CLIENT("Client started and waiting for Wi-Fi to connect");
     // Wait for Wi-Fi to connect
-    xEventGroupWaitBits(wifi_event_group, BIT0, pdFALSE, pdTRUE, portMAX_DELAY); // Wait for the Wi-Fi connected bit
+    xEventGroupWaitBits(wifi_event_group, BIT1, pdFALSE, pdTRUE, portMAX_DELAY); // Wait for the Wi-Fi connected bit
 
     // Start serial task
     PRINTFC_CLIENT("Starting serial task");
@@ -68,7 +68,8 @@ void send_server_request(){
             .url = SERVER_TEST,
             .cert_pem = (const char*)ca_cert_pem_start,
             .timeout_ms = 10000,
-        // .skip_cert_common_name_check = false,
+            .event_handler = NULL,
+            .skip_cert_common_name_check = true,
                 };
         
 
@@ -99,11 +100,15 @@ void send_server_request(){
                         printf("%02X ", buffer[i]);
                     }
                     printf("\n");                         
-            } else {
-            PRINTFC_CLIENT("Error performing HTTP POST: %s\n", esp_err_to_name(err));
             }
-        esp_http_client_cleanup(client);
     }
+    else 
+    {
+    PRINTFC_CLIENT("Error performing HTTP POST: %s\n", esp_err_to_name(err));
+    }
+    esp_http_client_cleanup(client);
+
+    
 }
 
 /*
@@ -134,7 +139,7 @@ static void http_native_request(void)
                 esp_http_client_get_status_code(client),
                 esp_http_client_get_content_length(client));
                 ESP_LOG_BUFFER_HEX(TAG, output_buffer, data_read);
-            } else {
+            } else { 
                 ESP_LOGE(TAG, "Failed to read response");
             }
         }
