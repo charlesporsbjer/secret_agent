@@ -15,8 +15,8 @@
 //172.16.219.34
 #define CSR_ENDPOINT "https://" SERVER_IP ":9191/spelare/csr"
 
-//#define SERVER_IP "172.16.219.34"   //patrik
-#define SERVER_IP "192.168.0.127" //HEMMA
+#define SERVER_IP "127.0.0.1"   //patrik
+//#define SERVER_IP "192.168.0.127" //HEMMA
 #define SERVER_REGISTER "https://" SERVER_IP ":9191/spelare/register"
 #define SERVER_START "https://" SERVER_IP ":9191/start"
 #define SERVER_TEST "https://" SERVER_IP ":9191/spelare/test"
@@ -37,7 +37,7 @@ void client_task(void *p)
   //  xTaskCreate(serial_task, "serial task", 8192, NULL, 5, NULL);
 
     // Register as a player
-   // register_player();
+    // register_player();
     // Generate and send CSR
  
     //generate_csr(csr, sizeof(csr), "p1"); // Use the actual player ID
@@ -55,7 +55,7 @@ void client_task(void *p)
     {
         send_server_request();
     
-        // Periodic task or logic (e.g., game state updates, handling MQTT messages)
+      
         vTaskDelay(pdMS_TO_TICKS(5000)); // Adjust the delay as needed
     }
 
@@ -75,17 +75,11 @@ void send_server_request(){
         esp_http_client_handle_t client = esp_http_client_init(&config);
 
         esp_http_client_set_method(client, HTTP_METHOD_POST);
-        esp_http_client_init
+        
 
-        // Perform the HTTP request
-        esp_err_t err = esp_http_client_perform(client);
-
-
-    
         int content_length = esp_http_client_get_content_length(client);
 
-
-        
+        esp_err_t err = esp_http_client_perform(client);
         
         if (err == ESP_OK) {
             PRINTFC_CLIENT("HTTP POST Status = %d, content_length = %lld\n",
@@ -104,15 +98,11 @@ void send_server_request(){
                     for (int i = 0; i < read_len; i++) {
                         printf("%02X ", buffer[i]);
                     }
-                    printf("\n");                
-            
+                    printf("\n");                         
             } else {
             PRINTFC_CLIENT("Error performing HTTP POST: %s\n", esp_err_to_name(err));
             }
-
-
         esp_http_client_cleanup(client);
-
     }
 }
 
