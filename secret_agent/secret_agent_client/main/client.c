@@ -12,8 +12,9 @@
 #include "esp_event.h"
 #include "esp_tls.h"
 
-
-#define SERVER_IP "192.168.2.206" // Change this to the server IP address
+// Zainab 172.16.217.104
+// Me 172.16.217.226
+#define SERVER_IP "172.16.217.226" // Change this to the server IP address
 
 #define SERVER_URL          "https://" SERVER_IP ":9191"
 #define SERVER_REGISTER_URL "https://" SERVER_IP ":9191/spelare"
@@ -106,10 +107,11 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt) {
                         PRINTFC_CLIENT("Error: Missing 'END CERTIFICATE' marker");
                     }
                 } else {
-                    char *player_id_start = strstr((char*)output_buffer, "\"id\": \"");
+                    // {"id": "%s"}
+                    char *player_id_start = strstr((char*)output_buffer, "{\"id");
                     if (player_id_start) {
-                        player_id_start += strlen("\"id\": \"");
-                        char *player_id_end = strstr(player_id_start, "\"");
+                        player_id_start += strlen("{\"id\": \"");
+                        char *player_id_end = strstr(player_id_start, "\"}");
                         if (player_id_end) {
                             int player_id_len = player_id_end - player_id_start;
                             if (player_id_len < sizeof(player_id)) {
@@ -182,8 +184,8 @@ void client_task(void *p)
 
     // Start the game when ready
     xEventGroupWaitBits(wifi_event_group, BIT0 | BIT1 | BIT2, pdFALSE, pdTRUE, portMAX_DELAY); // Wait for the signed certificate
-    PRINTFC_CLIENT("Sending game start request");
-    start_game();
+    // PRINTFC_CLIENT("Sending game start request");
+    // start_game();
 
     // Example MQTT initialization
     // Initialize the MQTT client and return the handle
@@ -236,6 +238,7 @@ void register_player()
         .skip_cert_common_name_check = true,
         .event_handler = _http_event_handler,
         .timeout_ms = 10000, // Increase timeout to 10 seconds
+        .method = HTTP_METHOD_POST,
     };
 
     esp_http_client_handle_t client = esp_http_client_init(&config);
@@ -244,11 +247,15 @@ void register_player()
         PRINTFC_CLIENT("Failed to initialize HTTP client");
         return;
     }
+    char* json = "{}";
+    size_t json_len =sizeof(json);
 
-    esp_http_client_set_method(client, HTTP_METHOD_POST);
+    esp_http_client_set_header(client, "Content-Type", "application/json");
+    esp_http_client_set_post_field(client, json, json_len); 
+
     esp_err_t err = esp_http_client_perform(client);
 
-    PRINTFC_CLIENT("Error performing HTTP POST: %s", esp_err_to_name(err));
+    PRINTFC_CLIENT("Performing HTTP POST errno: %s", esp_err_to_name(err));
 
     esp_http_client_cleanup(client);
 }

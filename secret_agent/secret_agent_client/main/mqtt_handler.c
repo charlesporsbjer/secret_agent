@@ -8,8 +8,10 @@
 #define MAX_PLAYER_ID_LEN 32
 #define MAX_TOPIC_LEN (17 + MAX_PLAYER_ID_LEN + 1) // 17 for base string + max player_id length + null terminator
 
-#define BROKER_IP "192.168.2.206"
-#define MQTT_BROKER_URI "mqtts://" BROKER_IP ":8883"
+// Zainab "172.16.217.104"
+// Me 172.16.217.226
+#define BROKER_IP "172.16.217.226"
+#define MQTT_BROKER_URI "mqtts://" BROKER_IP ":8884" // 8883 or 8884
 
 char shorter_id[32] = {0};
 
@@ -112,7 +114,6 @@ esp_mqtt_client_handle_t mqtt_app_start()
             .client_id = player_id,
         },
         .network.timeout_ms = 10000, // Increase timeout to 10 seconds
-
     };
         
     esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_cfg);
@@ -140,11 +141,8 @@ void mqtt_message_handler(void *event_data) {
     int player_id;
     int leader_id;
 
-    PRINTFC_MQTT("Received message from topic: %s", event->topic);
-    PRINTFC_MQTT("Message payload: %s", event->data);
-
     // Handle messages based on the topic
-    if (strcmp(event->topic, "/spelare/+/uplink") == 0) {
+    if (strcmp(event->topic, "/spelare/") == 0) {
         // Example: Player sends "ok" or "neka" to vote for leader
         if (strstr(event->data, "ok") != NULL) {
             PRINTFC_MQTT("Player voted 'ok' for leader.");
