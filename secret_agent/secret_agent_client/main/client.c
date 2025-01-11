@@ -16,6 +16,8 @@
 #define CSR_ENDPOINT "https://" SERVER_IP ":9191/spelare/csr"
 
 #define SERVER_IP "172.16.217.186"   //patrik
+
+
 //#define SERVER_IP "192.168.0.127" //HEMMA
 #define SERVER_REGISTER "https://" SERVER_IP ":9191/spelare/register"
 #define SERVER_START "https://" SERVER_IP ":9191/start"
@@ -34,6 +36,9 @@ void client_task(void *p)
     xTaskCreate(serial_task, "serial task", 16384, NULL, 5, NULL);
     PRINTFC_CLIENT("Returned from serial task");
 
+    char* testmessage = "test";
+
+   
   //  xTaskCreate(serial_task, "serial task", 8192, NULL, 5, NULL);
 
     // Register as a player
@@ -45,6 +50,19 @@ void client_task(void *p)
 
     // Start the game when ready
     //start_game();
+    
+    
+      
+    esp_mqtt_client_handle_t mqtt_client = mqtt_app_start();
+    if (mqtt_client) {
+        if (xSemaphoreTake(xSemaphore_mqtt_client, portMAX_DELAY) == pdTRUE) {
+            PRINTFC_CLIENT("MQTT client initialized successfully.");
+            mqtt_subscribe(mqtt_client);
+            xSemaphoreGive(xSemaphore_mqtt_client);
+        } else {
+            PRINTFC_CLIENT("Failed to take MQTT semaphore.");
+        }
+    }
 
 
 
@@ -54,6 +72,7 @@ void client_task(void *p)
     while (1)
     {
         send_server_request();
+      //  mqtt_publish(mqtt_client, "/spelare/test", testmessage);
     
       
         vTaskDelay(pdMS_TO_TICKS(5000)); // Adjust the delay as needed

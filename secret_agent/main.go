@@ -10,13 +10,6 @@ import (
 	"os"
 )
 
-/*
-//openssl genpkey -algorithm RSA -out server.key -pkeyopt rsa_keygen_bits:2048
-//openssl req -new -key server.key -out server.csr -subj "/C=US/ST=State/L=City/O=Organization/OU=Unit/CN=localhost"
-// 192.168.0.127
-
-// openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -days 365 -sha256
-*/
 func main() {
 
 	serverCert, err := tls.LoadX509KeyPair("./go_cert/server.crt", "./go_cert/server.key")
