@@ -1,17 +1,4 @@
-# Allow everyone to read and write to /torget
-topic read /torget
-topic write /torget
-
-# Allow server to write to /myndigheten
-topic write /myndigheten
-
-# Allow everyone to read from /myndigheten
-topic read /myndigheten
-
-# Allow unrestricted access to /spelare topics for now
-topic read /spelare/+/uplink
-topic write /spelare/+/downlink
-
-# Uncomment and restrict player access when security is needed
+pattern readwrite /torget
+pattern read /myndigheten
 pattern write /spelare/%u/uplink
 pattern read /spelare/%u/downlink
