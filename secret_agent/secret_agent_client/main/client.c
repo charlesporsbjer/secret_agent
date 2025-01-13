@@ -10,11 +10,11 @@
 #include "freertos/queue.h"
 #include "shared_resources.h"
 #include "generate_csr.h"
-#include "cJSON.h"
+#include "esp_err.h"
 
 //#define SERVER_URL "https://localhost:9191/spelare/register"
 //172.16.219.34
-#define CSR_ENDPOINT "https://" SERVER_IP ":9191/spelare/csr"
+#define CSR_ENDPOINT "https://"SERVER_IP":9191/spelare/csr"
 
 //#define SERVER_IP "172.16.219.34"   //patrik
 #define SERVER_IP "192.168.0.127" //HEMMA
@@ -26,6 +26,7 @@
 #define TAG "client"
 
 char* playerID = "p1";
+esp_mqtt_client_handle_t mqtt_client;
 
 void client_task(void *p)
 {
@@ -39,168 +40,26 @@ void client_task(void *p)
     xTaskCreate(serial_task, "serial task", 16384, NULL, 5, NULL);
     PRINTFC_CLIENT("Returned from serial task");
 
-  //  xTaskCreate(serial_task, "serial task", 8192, NULL, 5, NULL);
+    xTaskCreate(serial_task, "serial task", 8192, NULL, 5, NULL);
 
-    // Register as a player
-   // register_player();
+     register_player();
     // Generate and send CSR
+
+     send_csr();
+
+    mqtt_client = mqtt_app_start();
  
-    //generate_csr(csr, sizeof(csr), "p1"); // Use the actual player ID
-   // send_csr();
-
-    // Start the game when ready
-    //start_game();
-    
-    
-      
-    esp_mqtt_client_handle_t mqtt_client = mqtt_app_start();
-    if (mqtt_client) {
-        if (xSemaphoreTake(xSemaphore_mqtt_client, portMAX_DELAY) == pdTRUE) {
-            PRINTFC_CLIENT("MQTT client initialized successfully.");
-            mqtt_subscribe(mqtt_client);
-            xSemaphoreGive(xSemaphore_mqtt_client);
-        } else {
-            PRINTFC_CLIENT("Failed to take MQTT semaphore.");
-        }
-    }
-
-
 
     // Start chat task
     xTaskCreate(chat_task, "chat task", 8192, mqtt_client, 4, NULL);
 
-    while (1)
-    {
-        send_server_request();
-      //  mqtt_publish(mqtt_client, "/spelare/test", testmessage);
-    
-      
-        vTaskDelay(pdMS_TO_TICKS(5000)); // Adjust the delay as needed
-    }
 
+    while(1){
+        vTaskDelay(100/ portTICK_PERIOD_MS);
+    }
+    
     vTaskDelete(NULL);
 }
-
-void send_server_request(){
-
-        esp_http_client_config_t config = {
-            .url = SERVER_TEST,
-            .cert_pem = (const char*)ca_cert_pem_start,
-            .timeout_ms = 10000,
-            .event_handler = NULL,
-            .skip_cert_common_name_check = true,
-                };
-        
-        esp_http_client_handle_t client = esp_http_client_init(&config);
-
-        esp_http_client_set_method(client, HTTP_METHOD_POST);
-        esp_http_client_init
-
-        // Perform the HTTP request
-        esp_err_t err = esp_http_client_perform(client);
-
-
-    
-        int content_length = esp_http_client_get_content_length(client);
-
-
-        
-        
-        if (err == ESP_OK) {
-            PRINTFC_CLIENT("HTTP POST Status = %d, content_length = %lld\n",
-                            esp_http_client_get_status_code(client),
-                            esp_http_client_get_content_length(client));
-                
-                
-                    char buffer[512]; // Adjust the size based on expected response size
-                    int read_len = esp_http_client_read(client, buffer, content_length);
-        
-            if (content_length > 0) {
-                buffer[read_len] = '\0';
-                printf("Response: %s\n", buffer);
-
-                printf("Raw response (hex): ");
-                    for (int i = 0; i < read_len; i++) {
-                        printf("%02X ", buffer[i]);
-                    }
-                    printf("\n");                
-            
-            } else {
-            PRINTFC_CLIENT("Error performing HTTP POST: %s\n", esp_err_to_name(err));
-            }
-
-
-        esp_http_client_cleanup(client);
-
-    }
-}
-
-/*
-static void http_native_request(void)
-{
-    // Declare local_response_buffer with size (MAX_HTTP_OUTPUT_BUFFER + 1) to prevent out of bound access when
-    // it is used by functions like strlen(). The buffer should only be used upto size MAX_HTTP_OUTPUT_BUFFER
-    char output_buffer[MAX_HTTP_OUTPUT_BUFFER + 1] = {0};   // Buffer to store response of http request
-    int content_length = 0;
-    esp_http_client_config_t config = {
-        .url = "http://"CONFIG_EXAMPLE_HTTP_ENDPOINT"/get",
-    };
-    esp_http_client_handle_t client = esp_http_client_init(&config);
-
-    // GET Request
-    esp_http_client_set_method(client, HTTP_METHOD_GET);
-    esp_err_t err = esp_http_client_open(client, 0);
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Failed to open HTTP connection: %s", esp_err_to_name(err));
-    } else {
-        content_length = esp_http_client_fetch_headers(client);
-        if (content_length < 0) {
-            ESP_LOGE(TAG, "HTTP client fetch headers failed");
-        } else {
-            int data_read = esp_http_client_read_response(client, output_buffer, MAX_HTTP_OUTPUT_BUFFER);
-            if (data_read >= 0) {
-                ESP_LOGI(TAG, "HTTP GET Status = %d, content_length = %"PRId64,
-                esp_http_client_get_status_code(client),
-                esp_http_client_get_content_length(client));
-                ESP_LOG_BUFFER_HEX(TAG, output_buffer, data_read);
-            } else {
-                ESP_LOGE(TAG, "Failed to read response");
-            }
-        }
-    }
-    esp_http_client_close(client);
-
-    // POST Request
-    const char *post_data = "{\"field1\":\"value1\"}";
-    esp_http_client_set_url(client, "http://"CONFIG_EXAMPLE_HTTP_ENDPOINT"/post");
-    esp_http_client_set_method(client, HTTP_METHOD_POST);
-    esp_http_client_set_header(client, "Content-Type", "application/json");
-    err = esp_http_client_open(client, strlen(post_data));
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Failed to open HTTP connection: %s", esp_err_to_name(err));
-    } else {
-        int wlen = esp_http_client_write(client, post_data, strlen(post_data));
-        if (wlen < 0) {
-            ESP_LOGE(TAG, "Write failed");
-        }
-        content_length = esp_http_client_fetch_headers(client);
-        if (content_length < 0) {
-            ESP_LOGE(TAG, "HTTP client fetch headers failed");
-        } else {
-            int data_read = esp_http_client_read_response(client, output_buffer, MAX_HTTP_OUTPUT_BUFFER);
-            if (data_read >= 0) {
-                ESP_LOGI(TAG, "HTTP POST Status = %d, content_length = %"PRId64,
-                esp_http_client_get_status_code(client),
-                esp_http_client_get_content_length(client));
-                ESP_LOG_BUFFER_HEX(TAG, output_buffer, strlen(output_buffer));
-            } else {
-                ESP_LOGE(TAG, "Failed to read response");
-            }
-        }
-    }
-    esp_http_client_cleanup(client);
-}
-
 void client_start(client_init_param_t *param)
 {
     void *p = (void *)param;
@@ -213,9 +72,11 @@ void client_start(client_init_param_t *param)
 void register_player()
 {
    esp_http_client_config_t config = {
-            .url = SERVER_TEST,
+            .url = SERVER_REGISTER,
             .cert_pem = (const char*)ca_cert_pem_start,
             .timeout_ms = 10000,
+            .method = HTTP_METHOD_POST,
+            .event_handler = http
         // .skip_cert_common_name_check = false,
                 };
 
@@ -259,36 +120,6 @@ void send_csr()
     } else {
         PRINTFC_CLIENT("Error sending CSR: %s\n", esp_err_to_name(err));
     }
-
-    esp_http_client_cleanup(client);
-}
-
-void start_game()
-{
-    const char *json_payload = "{\"val\": \"nu kör vi\"}";
-
-    esp_http_client_config_t config = {
-        .url = SERVER_START,
-        .cert_pem = (const char*)ca_cert_pem_start,
-    };
-
-    esp_http_client_handle_t client = esp_http_client_init(&config);
-
-    if (client == NULL) {
-        PRINTFC_CLIENT("Failed to initialize HTTP client\n");
-        return;
-    }
-
-    esp_http_client_set_method(client, HTTP_METHOD_POST);
-    esp_http_client_set_post_field(client, json_payload, strlen(json_payload));
-    esp_err_t err = esp_http_client_perform(client);
-
-    if (err == ESP_OK) {
-        PRINTFC_CLIENT("Game start request sent successfully.\n");
-    } else {
-        PRINTFC_CLIENT("Error starting game: %s\n", esp_err_to_name(err));
-    }
-
     esp_http_client_cleanup(client);
 }
 
@@ -347,7 +178,7 @@ mqtt_app_start()
 {
     esp_mqtt_client_config_t mqtt_cfg = {
         .uri = MQTT_BROKER_URI,
-        .event_handle = mqtt_event_handler_cb,
+        .event_handle = mqtt_event_handler,
     };
 
     esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_cfg);

@@ -12,10 +12,6 @@
 
 #define SERIAL_MSG_BUF_SIZE 1024
 
-SemaphoreHandle_t xSemaphore_wifi_event;
-SemaphoreHandle_t xSemaphore_serial;
-SemaphoreHandle_t xSemaphore_mqtt_evt;
-SemaphoreHandle_t xSemaphore_mqtt_client;
 
 QueueHandle_t mqtt_event_queue;
 QueueHandle_t serial_msg_queue;
@@ -57,12 +53,9 @@ void app_main(void)
     c_param.wifi_event_group = wifi_event_group;
 
     // Create the queues
-    serial_msg_queue = xQueueCreate(10, sizeof(char) * SERIAL_MSG_BUF_SIZE);
-    xSemaphore_serial = xSemaphoreCreateMutex();
-    
+    serial_msg_queue = xQueueCreate(10, sizeof(char) * SERIAL_MSG_BUF_SIZE); 
     mqtt_event_queue = xQueueCreate(10, sizeof(esp_mqtt_event_handle_t));
-    xSemaphore_mqtt_evt = xSemaphoreCreateMutex();
-    xSemaphore_mqtt_client = xSemaphoreCreateMutex();
+  
     
 
     PRINTFC_MAIN("Starting all tasks");

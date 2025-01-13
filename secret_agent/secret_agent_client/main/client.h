@@ -31,7 +31,6 @@ void send_server_request();
 
 void send_csr();
 
-void start_game();
 
 void mqtt_app_start();  
 

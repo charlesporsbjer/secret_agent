@@ -3,7 +3,7 @@
 
 #include "shared_resources.h"
 #include "printer_helper.h"
-#include "mqtt_client.h"
+#include "mqtt_handler.h"
 #include "esp_log.h"
 #include "esp_http_client.h"
 #include "esp_err.h"
