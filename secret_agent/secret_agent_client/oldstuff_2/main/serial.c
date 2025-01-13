@@ -58,7 +58,7 @@ void serial_task(void *pvParameters)
                     
                     int len = uart_read_bytes(UART_NUM, data, BUF_SIZE, 20 / portTICK_PERIOD_MS);
                     if (event.size > 0) {
-                        data[event.size] = '\0';  // Null terminate the string
+                        data[len] = '\0';  // Null terminate the string
 
                         // Process commands from serial input
                         PRINTFC_SERIAL("Received command: %s", data);

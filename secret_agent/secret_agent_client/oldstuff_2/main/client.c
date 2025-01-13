@@ -1,15 +1,22 @@
 #include "client.h"
 #include "printer_helper.h"
 #include "esp_http_client.h"
-#include "esp_http_client.h"
+#include "certs.h"
+#include "esp_http_client.h" // Add this line to include the HTTP event enumerations
 #include "mqtt_handler.h"
 #include "serial.h"
+#include "chat.h"
 #include "freertos/queue.h"
 #include "shared_resources.h"
 #include "generate_csr.h"
 #include "esp_event.h"
 #include "esp_tls.h"
 
+// Zainab 172.16.217.104
+// Me 172.16.217.226
+#define SERVER_IP "172.16.217.226" // Change this to the server IP address
+
+#define SERVER_URL          "https://" SERVER_IP ":9191"
 #define SERVER_REGISTER_URL "https://" SERVER_IP ":9191/spelare"
 #define SERVER_START_URL    "https://" SERVER_IP ":9191/start"
 #define CSR_ENDPOINT        "https://" SERVER_IP ":9191/spelare/csr"
@@ -20,8 +27,8 @@
 esp_mqtt_client_handle_t mqtt_client;
 
 esp_err_t _http_event_handler(esp_http_client_event_t *evt) {
-    static char *output_buffer;
-    static int output_len;
+    static char *output_buffer;  // Buffer to store response of http request from event handler
+    static int output_len;      // Stores number of bytes read
 
     switch (evt->event_id) {
         case HTTP_EVENT_ERROR:
@@ -103,7 +110,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt) {
                     // {"id": "%s"}
                     char *player_id_start = strstr((char*)output_buffer, "{\"id");
                     if (player_id_start) {
-                        player_id_start += strlen("{\"id\":\"");
+                        player_id_start += strlen("{\"id\": \"");
                         char *player_id_end = strstr(player_id_start, "\"}");
                         if (player_id_end) {
                             int player_id_len = player_id_end - player_id_start;
@@ -156,13 +163,14 @@ void client_task(void *p)
 {
     client_init_param_t *param = (client_init_param_t *)p;
     PRINTFC_CLIENT("Client started and waiting for Wi-Fi to connect");
+    // Wait for Wi-Fi to connect
+    xEventGroupWaitBits(wifi_event_group, BIT0 | BIT1, pdFALSE, pdTRUE, portMAX_DELAY); // Wait for the Wi-Fi connected bit
 
-    //wait wifi to connect
-    xEventGroupWaitBits(wifi_event_group, BIT0 | BIT1, pdFALSE, pdTRUE, portMAX_DELAY);
-
+    // Start serial task
     PRINTFC_CLIENT("Starting serial task");
     xTaskCreate(serial_task, "serial task", 16384, NULL, 5, NULL);
 
+    // Register as a player
     PRINTFC_CLIENT("Sending player registration request");
     register_player();
 
@@ -174,12 +182,12 @@ void client_task(void *p)
     PRINTFC_CLIENT("Sending CSR");
     send_csr(csr);
 
-    // wait for cert
-    xEventGroupWaitBits(wifi_event_group, BIT0 | BIT1 | BIT2, pdFALSE, pdTRUE, portMAX_DELAY);
-
+    // Start the game when ready
+    xEventGroupWaitBits(wifi_event_group, BIT0 | BIT1 | BIT2, pdFALSE, pdTRUE, portMAX_DELAY); // Wait for the signed certificate
     // PRINTFC_CLIENT("Sending game start request");
     // start_game();
 
+    // Example MQTT initialization
     // Initialize the MQTT client and return the handle
     mqtt_client = mqtt_app_start();
     if (mqtt_client) {
@@ -193,16 +201,17 @@ void client_task(void *p)
     }
 
     // Start chat task
-    /*if (xTaskCreate(chat_task, "chat task", 8192, (void*)mqtt_client, 4, NULL) != pdPASS) 
+    if (xTaskCreate(chat_task, "chat task", 8192, (void*)mqtt_client, 4, NULL) != pdPASS) 
     {
         PRINTFC_CLIENT("Failed to create chat task");
         vTaskDelete(NULL);
         return;
-    }*/
+    }
 
     while (1)
     {
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        // Periodic task or logic (e.g., game state updates, handling MQTT messages)
+        vTaskDelay(pdMS_TO_TICKS(1000)); // Adjust the delay as needed
     }
 
     vTaskDelete(NULL);
@@ -218,6 +227,7 @@ void client_start(client_init_param_t *param)
     }
 }
 
+// Register ESP32 as a player
 void register_player()
 {
     //PRINTFC_CLIENT("ca_server_copy: %s", (const char*)ca_server_copy);
@@ -227,7 +237,7 @@ void register_player()
         .cert_pem = (const char*)ca_server_copy, // Server's certificate for verification
         .skip_cert_common_name_check = true,
         .event_handler = _http_event_handler,
-        .timeout_ms = 10000,
+        .timeout_ms = 10000, // Increase timeout to 10 seconds
         .method = HTTP_METHOD_POST,
     };
 
@@ -257,10 +267,10 @@ void send_csr(const char *csr)
     esp_http_client_config_t config = {
         .url = CSR_ENDPOINT,
         .cert_pem = (const char *)ca_server_copy,
-        .skip_cert_common_name_check = true, // test, remove later
+        .skip_cert_common_name_check = true, // For testing only; remove in production
         .common_name = player_id,
         .event_handler = _http_event_handler,
-        .timeout_ms = 10000,
+        .timeout_ms = 10000, // Increase timeout to 10 seconds
     };
 
     esp_http_client_handle_t client = esp_http_client_init(&config);
@@ -273,7 +283,7 @@ void send_csr(const char *csr)
     esp_http_client_set_method(client, HTTP_METHOD_POST);
     esp_http_client_set_post_field(client, csr, strlen(csr));
 
-    // HTTP request
+    // Perform the HTTP request
     esp_err_t err = esp_http_client_perform(client);
     if (err == ESP_OK) {
         PRINTFC_CLIENT("CSR submitted successfully.");
@@ -284,7 +294,7 @@ void send_csr(const char *csr)
     PRINTFC_CLIENT("Error sending CSR: %s", esp_err_to_name(err));
     }
 
-    // clean client
+    // Clean up the HTTP client
     esp_http_client_cleanup(client);
 }
 
@@ -360,7 +370,7 @@ esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
             PRINTFC_CLIENT("Received data: Topic=%.*s, Message=%.*s",
                    event->topic_len, event->topic,
                    event->data_len, event->data);
-            // Process the message
+            // Process the message (e.g., update game state)
             if (xSemaphoreTake(xSemaphore_mqtt_evt, portMAX_DELAY) == pdTRUE) 
             {   
                 xQueueSend(mqtt_event_queue, event, portMAX_DELAY); // Send the event to the queue
