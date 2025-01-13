@@ -1,4 +1,3 @@
-#include "server.h"
 #include "client.h"
 #include "serial.h"
 #include "wifi_handler.h"
@@ -23,7 +22,6 @@ QueueHandle_t serial_msg_queue;
 
 EventGroupHandle_t wifi_event_group;
 client_init_param_t c_param;
-server_init_param_t s_param;
 
 wifi_init_param_t w_param = {
     .ssid = CONFIG_WIFI_SSID,
@@ -55,7 +53,6 @@ void app_main(void)
     PRINTFC_MAIN("Creating event group");
     wifi_event_group = xEventGroupCreate();
     xSemaphore_wifi_event = xSemaphoreCreateMutex();
-    s_param.wifi_event_group = wifi_event_group;
     w_param.wifi_event_group = wifi_event_group;
     c_param.wifi_event_group = wifi_event_group;
 
@@ -70,7 +67,7 @@ void app_main(void)
 
     PRINTFC_MAIN("Starting all tasks");
     wifi_init_start(&w_param);
-   // server_start(&s_param);
+
     client_start(&c_param);
     vTaskDelay(pdMS_TO_TICKS(1000));
     PRINTFC_MAIN("Main is done");

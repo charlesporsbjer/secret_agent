@@ -3,9 +3,19 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
-#include "mqtt_client.h"
+#include "mqtt_handler.h"
 #include "freeRTOS/queue.h"
 #include "shared_resources.h"
+
+#define CSR_ENDPOINT "https://" SERVER_IP ":9191/spelare/csr"
+
+#define SERVER_IP "192.168.0.127" //HEMMA
+#define SERVER_REGISTER "https://" SERVER_IP ":9191/spelare/register"
+#define SERVER_START "https://" SERVER_IP ":9191/start"
+#define SERVER_TEST "https://" SERVER_IP ":9191/spelare/test"
+#define SERVER_URL "https://" SERVER_IP ":9191/spelare/register"
+
+extern char* playerID;
 
 typedef struct client_init_param_t {
     EventGroupHandle_t wifi_event_group;
@@ -22,6 +32,8 @@ void send_server_request();
 void send_csr();
 
 void start_game();
+
+void mqtt_app_start();  
 
 void mqtt_subscribe(esp_mqtt_client_handle_t client);
 

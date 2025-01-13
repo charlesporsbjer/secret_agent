@@ -5,6 +5,8 @@
 #include "freertos/semphr.h"
 #include "freertos/queue.h"
 
+#define GOT_PLAYER_ID_BIT BIT10
+
 extern SemaphoreHandle_t xSemaphore_serial;
 extern SemaphoreHandle_t xSemaphore_mqtt_evt;
 extern SemaphoreHandle_t xSemaphore_mqtt_client;

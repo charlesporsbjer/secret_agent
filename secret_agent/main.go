@@ -70,8 +70,9 @@ func clientTestHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Only POST requests are allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	response := "Client test successful"
-	w.Header().Set("Content-Type", "text/plain")
+	playerID := assignPlayerID_DEBUG()
+	response := fmt.Sprintf(`{"id": "%s"}`, playerID)
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(response))
 }
