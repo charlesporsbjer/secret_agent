@@ -4,7 +4,11 @@
 
 uint8_t key_pem[2048];
 
+<<<<<<< HEAD
 int generate_csr(char *csr_buf, size_t csr_buf_size, const char *player_id)
+=======
+int generate_csr(char *csr_buf, size_t csr_buf_size, const char *subject_name)
+>>>>>>> patriks
 {
     int ret;
     mbedtls_pk_context key;    

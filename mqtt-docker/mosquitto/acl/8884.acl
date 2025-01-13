@@ -1,4 +1,0 @@
-pattern readwrite /torget
-pattern read /myndigheten
-pattern write /spelare/%u/uplink
-pattern read /spelare/%u/downlink

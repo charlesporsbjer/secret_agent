@@ -1,4 +1,5 @@
 #include "client.h"
+#include "serial.h"
 #include "wifi_handler.h"
 #include "printer_helper.h"
 #include "mqtt_handler.h"
@@ -12,12 +13,18 @@
 #define SERIAL_MSG_BUF_SIZE 1024
 
 char signed_certificate[2048];
+<<<<<<< HEAD
 char player_id[256];
 
 SemaphoreHandle_t xSemaphore_wifi_event;
 SemaphoreHandle_t xSemaphore_serial;
 SemaphoreHandle_t xSemaphore_mqtt_evt;
 SemaphoreHandle_t xSemaphore_mqtt_client;
+=======
+char shorter_id[32] = {0};
+char playerID[256] = "p1";
+
+>>>>>>> patriks
 
 QueueHandle_t mqtt_event_queue;
 QueueHandle_t serial_msg_queue;
@@ -33,6 +40,7 @@ wifi_init_param_t w_param = {
 
 void app_main(void)
 {
+    esp_log_level_set("wifi", ESP_LOG_WARN); 
     PRINTFC_MAIN("Main is starting");
 
     esp_log_level_set("wifi", ESP_LOG_ERROR);
@@ -53,20 +61,28 @@ void app_main(void)
 
     PRINTFC_MAIN("Creating event group");
     wifi_event_group = xEventGroupCreate();
+<<<<<<< HEAD
     xSemaphore_wifi_event = xSemaphoreCreateMutex();
+=======
+ 
+>>>>>>> patriks
     w_param.wifi_event_group = wifi_event_group;
     c_param.wifi_event_group = wifi_event_group;
 
     // Create the queues
-    serial_msg_queue = xQueueCreate(10, sizeof(char) * SERIAL_MSG_BUF_SIZE);
-    xSemaphore_serial = xSemaphoreCreateMutex();
-    
+    serial_msg_queue = xQueueCreate(10, sizeof(char) * SERIAL_MSG_BUF_SIZE); 
     mqtt_event_queue = xQueueCreate(10, sizeof(esp_mqtt_event_handle_t));
-    xSemaphore_mqtt_evt = xSemaphoreCreateMutex();
-    xSemaphore_mqtt_client = xSemaphoreCreateMutex();
+  
+    
 
     PRINTFC_MAIN("Starting all tasks");
+<<<<<<< HEAD
     wifi_handler_start(&w_param);
+=======
+    wifi_init_start(&w_param);
+
+>>>>>>> patriks
     client_start(&c_param);
+    vTaskDelay(pdMS_TO_TICKS(1000));
     PRINTFC_MAIN("Main is done");
 }

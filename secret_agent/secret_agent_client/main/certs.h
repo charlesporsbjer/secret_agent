@@ -3,6 +3,7 @@
 
 #include "stdint.h"
 
+<<<<<<< HEAD
 // extern const uint8_t client_cert_pem_start[] asm("_binary_client_cert_pem_start");
 // extern const uint8_t client_cert_pem_end[] asm("_binary_client_cert_pem_end");
 // extern const uint8_t client_key_pem_start[] asm("_binary_client_key_pem_start");
@@ -16,6 +17,14 @@
 // extern const uint8_t ca_key_end[] asm("_binary_ca_key_end");
 
 extern const uint8_t ca_server_copy[] asm("_binary_ca_server_copy_crt_start");
+=======
+extern const uint8_t ca_cert_pem_start[] asm("_binary_ca_crt_start");
+extern const uint8_t ca_cert_pem_end[] asm("_binary_ca_crt_end");
+
+
+
+
+>>>>>>> patriks
 
 
 #endif

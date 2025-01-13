@@ -1,6 +1,7 @@
 #include "client.h"
 #include "printer_helper.h"
 #include "esp_http_client.h"
+<<<<<<< HEAD
 #include "certs.h"
 #include "esp_http_client.h" // Add this line to include the HTTP event enumerations
 #include "mqtt_handler.h"
@@ -158,23 +159,42 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt) {
     }
     return ESP_OK;
 }
+=======
+#include "generate_csr.h"
+#include "esp_err.h"
+
+
+#define TAG "client"
+
+esp_mqtt_client_handle_t mqtt_client;
+>>>>>>> patriks
 
 void client_task(void *p)
 {
     client_init_param_t *param = (client_init_param_t *)p;
     PRINTFC_CLIENT("Client started and waiting for Wi-Fi to connect");
     // Wait for Wi-Fi to connect
+<<<<<<< HEAD
     xEventGroupWaitBits(wifi_event_group, BIT0 | BIT1, pdFALSE, pdTRUE, portMAX_DELAY); // Wait for the Wi-Fi connected bit
+=======
+    xEventGroupWaitBits(wifi_event_group, BIT1, pdFALSE, pdTRUE, portMAX_DELAY); // Wait for the Wi-Fi connected bit
+>>>>>>> patriks
 
     // Start serial task
     PRINTFC_CLIENT("Starting serial task");
     xTaskCreate(serial_task, "serial task", 16384, NULL, 5, NULL);
 
+<<<<<<< HEAD
     // Register as a player
     PRINTFC_CLIENT("Sending player registration request");
     register_player();
+=======
+    xTaskCreate(serial_task, "serial task", 8192, NULL, 5, NULL);
+>>>>>>> patriks
 
+     register_player();
     // Generate and send CSR
+<<<<<<< HEAD
     char csr[2048];
     PRINTFC_CLIENT("player_id before generating CSR: %s", player_id);
     generate_csr(csr, sizeof(csr), player_id); // Use the actual player ID
@@ -199,24 +219,24 @@ void client_task(void *p)
             PRINTFC_CLIENT("Failed to take MQTT semaphore.");
         }
     }
+=======
+
+     send_csr();
+
+    mqtt_client = mqtt_app_start();
+ 
+>>>>>>> patriks
 
     // Start chat task
-    if (xTaskCreate(chat_task, "chat task", 8192, (void*)mqtt_client, 4, NULL) != pdPASS) 
-    {
-        PRINTFC_CLIENT("Failed to create chat task");
-        vTaskDelete(NULL);
-        return;
-    }
+  //  xTaskCreate(chat_task, "chat task", 8192, mqtt_client, 4, NULL);
 
-    while (1)
-    {
-        // Periodic task or logic (e.g., game state updates, handling MQTT messages)
-        vTaskDelay(pdMS_TO_TICKS(1000)); // Adjust the delay as needed
-    }
 
+    while(1){
+        vTaskDelay(100/ portTICK_PERIOD_MS);
+    }
+    
     vTaskDelete(NULL);
 }
-
 void client_start(client_init_param_t *param)
 {
     PRINTFC_CLIENT("Client starting");
@@ -230,6 +250,7 @@ void client_start(client_init_param_t *param)
 // Register ESP32 as a player
 void register_player()
 {
+<<<<<<< HEAD
     //PRINTFC_CLIENT("ca_server_copy: %s", (const char*)ca_server_copy);
     PRINTFC_CLIENT("Register URL: %s", SERVER_REGISTER_URL);
     esp_http_client_config_t config = {
@@ -240,6 +261,16 @@ void register_player()
         .timeout_ms = 10000, // Increase timeout to 10 seconds
         .method = HTTP_METHOD_POST,
     };
+=======
+   esp_http_client_config_t config = {
+            .url = SERVER_REGISTER,
+            .cert_pem = (const char*)ca_cert_pem_start,
+            .timeout_ms = 10000,
+            .method = HTTP_METHOD_POST,
+            .event_handler = http_event_handler,
+        // .skip_cert_common_name_check = false,
+                };
+>>>>>>> patriks
 
     esp_http_client_handle_t client = esp_http_client_init(&config);
 
@@ -254,6 +285,7 @@ void register_player()
     esp_http_client_set_post_field(client, json, json_len); 
 
     esp_err_t err = esp_http_client_perform(client);
+<<<<<<< HEAD
 
     PRINTFC_CLIENT("Performing HTTP POST errno: %s", esp_err_to_name(err));
 
@@ -271,6 +303,20 @@ void send_csr(const char *csr)
         .common_name = player_id,
         .event_handler = _http_event_handler,
         .timeout_ms = 10000, // Increase timeout to 10 seconds
+=======
+    esp_http_client_cleanup(client);
+}
+
+void send_csr()
+{
+    xEventGroupWaitBits(wifi_event_group, BIT10, pdFALSE, pdTRUE, portMAX_DELAY); // Wait for the Wi-Fi connected bit
+    char csr[2048];
+    generate_csr(csr, sizeof(csr), playerID); // Use the actual player ID
+
+    esp_http_client_config_t config = {
+        .url = CSR_ENDPOINT,
+        .cert_pem = (const char*)ca_cert_pem_start     
+>>>>>>> patriks
     };
 
     esp_http_client_handle_t client = esp_http_client_init(&config);
@@ -293,6 +339,7 @@ void send_csr(const char *csr)
     } else {
     PRINTFC_CLIENT("Error sending CSR: %s", esp_err_to_name(err));
     }
+<<<<<<< HEAD
 
     // Clean up the HTTP client
     esp_http_client_cleanup(client);
@@ -329,6 +376,8 @@ void start_game()
         PRINTFC_CLIENT("Error starting game: %s", esp_err_to_name(err));
     }
 
+=======
+>>>>>>> patriks
     esp_http_client_cleanup(client);
 }
 
@@ -382,3 +431,6 @@ esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
     }
     return ESP_OK;
 }
+
+
+

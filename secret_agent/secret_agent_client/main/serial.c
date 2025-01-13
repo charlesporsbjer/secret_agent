@@ -5,8 +5,12 @@
 #include "printer_helper.h"
 #include "string.h"
 #include "shared_resources.h"
+<<<<<<< HEAD
 #include "mqtt_client.h"
 
+=======
+#include "stdio.h"
+>>>>>>> patriks
 
 #define UART_NUM UART_NUM_0
 #define BUF_SIZE 1024
@@ -19,9 +23,6 @@ void serial_task(void *pvParameters)
 {
     PRINTFC_SERIAL("Serial task started");
 
-    uint8_t data[BUF_SIZE];
-    uart_event_t event;
-
     // UART configuration
     const uart_config_t uart_config = {
         .baud_rate = 115200,
@@ -32,6 +33,10 @@ void serial_task(void *pvParameters)
         .rx_flow_ctrl_thresh = 122,
     };
 
+    uint8_t data[128];
+    char input_buffer[128] = {0};
+    int buffer_index = 0;
+
     // Install UART driver
     ESP_ERROR_CHECK(uart_param_config(UART_NUM, &uart_config));
     uart_set_pin(UART_NUM, TX_PIN, RX_PIN, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
@@ -41,18 +46,12 @@ void serial_task(void *pvParameters)
 
     while (1)
     {
-        // Wait for UART event
-        if (xQueueReceive(serial_msg_queue, (void *)&event, portMAX_DELAY) == pdTRUE)
-        {
-            switch (event.type)
-            {
-                case UART_DATA:
-                    memset(data, 0, sizeof(data));
-                    uart_read_bytes(UART_NUM, data, event.size, pdTICKS_TO_MS(500));
-                    data[event.size] = '\0'; // Ensure null-termination
-                    PRINTFC_SERIAL("Received %d bytes", event.size);
-                    PRINTFC_SERIAL("Data: %s", data);
+        char* input_string = read_uart_data(data, input_buffer, &buffer_index);
+        if (input_string != NULL) {
+            // Process the received string here
+            printf("\n Processed: %s\n", input_string);
 
+<<<<<<< HEAD
                     // Echo the data back
                     uart_write_bytes(UART_NUM, (const char *)data, event.size);
                     
@@ -111,13 +110,44 @@ void serial_task(void *pvParameters)
                     PRINTFC_SERIAL("UART event type: %d", event.type);
                     break;
             }
+=======
+>>>>>>> patriks
         }
-        vTaskDelay(pdMS_TO_TICKS(1000)); // Adjust the delay as needed
+        vTaskDelay(pdMS_TO_TICKS(50));  // Optional delay
+                   
     }
     vTaskDelete(NULL);
 }
 
+<<<<<<< HEAD
 void create_topic(char *topic, size_t topic_size, const char *base_topic, char* player_id) {
     // Format the topic string based on the base topic and player ID
     snprintf(topic, topic_size, base_topic, player_id);
+=======
+char* read_uart_data(uint8_t* data, char* input_buffer, int* buffer_index) {
+
+    int len = uart_read_bytes(UART_NUM_0, data, 128, pdMS_TO_TICKS(100));  //nått kan va knas här med pdms
+    if (len > 0) {
+        for (int i = 0; i < len; i++) {
+            if (data[i] == '\n' || data[i] == '\r') {  // End of input
+                input_buffer[*buffer_index] = '\0';   // Null-terminate
+                *buffer_index = 0;                   // Reset index
+                return input_buffer;                // Return the string
+            } else {
+                if (*buffer_index < 127) {
+                    input_buffer[*buffer_index] = data[i];
+                    printf("%c", data[i]);
+                    fflush(stdout);
+                    (*buffer_index)++;
+                } else {
+                    // Buffer overflow
+                    printf("Error: Input buffer overflow. Resetting.\n");
+                    fflush(stdout);
+                    *buffer_index = 0;               // Reset index
+                }
+            }
+        }
+    }
+    return NULL;  // No complete line received yet
+>>>>>>> patriks
 }

@@ -1,0 +1,9 @@
+<<<<<<< HEAD:mqtt-docker/mosquitto/acl/8884.acl
+pattern readwrite /torget
+pattern read /myndigheten
+pattern write /spelare/%u/uplink
+pattern read /spelare/%u/downlink
+=======
+
+pattern readwrite hello/%u/world
+>>>>>>> patriks:secret_agent/mosquitto/acl/8884.acl

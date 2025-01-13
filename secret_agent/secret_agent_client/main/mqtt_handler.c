@@ -1,4 +1,5 @@
 #include "mqtt_handler.h"
+<<<<<<< HEAD
 #include "printer_helper.h"
 #include "certs.h"
 #include "shared_resources.h"
@@ -16,6 +17,13 @@
 char shorter_id[32] = {0};
 
 #define MAX_MSG_LEN 128
+=======
+
+
+
+
+
+>>>>>>> patriks
 
 static void log_error_if_nonzero(const char *message, int error_code)
 {
@@ -23,6 +31,7 @@ static void log_error_if_nonzero(const char *message, int error_code)
         PRINTFC_MQTT("Last error %s: 0x%x", message, error_code);
     }
 }
+
 
 static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)
 {
@@ -33,6 +42,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     switch ((esp_mqtt_event_id_t)event_id) {
     case MQTT_EVENT_CONNECTED:
         PRINTFC_MQTT("MQTT_EVENT_CONNECTED");
+<<<<<<< HEAD
         msg_id = esp_mqtt_client_subscribe(client, "/torget", 0);
         PRINTFC_MQTT("Subscribed to /torget, msg_id=%d", msg_id);
         msg_id = esp_mqtt_client_subscribe(client, "/myndigheten", 0);
@@ -46,14 +56,20 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         PRINTFC_MQTT("Subscribed to %s, msg_id=%d", uplink_topic, msg_id);
         msg_id = esp_mqtt_client_subscribe(client, downlink_topic, 0);
         PRINTFC_MQTT("Subscribed to %s, msg_id=%d", downlink_topic, msg_id);
+=======
+
+        // fyll ut
+
+>>>>>>> patriks
         break;
     case MQTT_EVENT_DISCONNECTED:
         PRINTFC_MQTT("MQTT_EVENT_DISCONNECTED");
         break;
     case MQTT_EVENT_SUBSCRIBED:
         PRINTFC_MQTT("MQTT_EVENT_SUBSCRIBED, msg_id=%d", event->msg_id);
-        msg_id = esp_mqtt_client_publish(client, "/spelare/qos0", "data", 0, 0, 0);
-        PRINTFC_MQTT("sent publish successful, msg_id=%d", msg_id);
+
+        //// fyll ut
+       
         break;
     case MQTT_EVENT_UNSUBSCRIBED:
         PRINTFC_MQTT("MQTT_EVENT_UNSUBSCRIBED, msg_id=%d", event->msg_id);
@@ -63,19 +79,22 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         break;
     case MQTT_EVENT_DATA:
         PRINTFC_MQTT("MQTT_EVENT_DATA");
+<<<<<<< HEAD
         PRINTFC_MQTT("TOPIC=%.*s\r", event->topic_len, event->topic);
         PRINTFC_MQTT("DATA=%.*s\r", event->data_len, event->data);
         
         mqtt_message_handler(event_data);
 
+=======
+>>>>>>> patriks
         break;
     case MQTT_EVENT_ERROR:
         PRINTFC_MQTT("MQTT_EVENT_ERROR");
         if (event->error_handle->error_type == MQTT_ERROR_TYPE_TCP_TRANSPORT) {
-            log_error_if_nonzero("reported from esp-tls", event->error_handle->esp_tls_last_esp_err);
-            log_error_if_nonzero("reported from tls stack", event->error_handle->esp_tls_stack_err);
-            log_error_if_nonzero("captured as transport's socket errno",  event->error_handle->esp_transport_sock_errno);
-            PRINTFC_MQTT("Last errno string (%s)", strerror(event->error_handle->esp_transport_sock_errno));
+            // log_error_if_nonzero("reported from esp-tls", event->error_handle->esp_tls_last_esp_err);
+            // log_error_if_nonzero("reported from tls stack", event->error_handle->esp_tls_stack_err);
+            // log_error_if_nonzero("captured as transport's socket errno",  event->error_handle->esp_transport_sock_errno);
+            // PRINTFC_MQTT("Last errno string (%s)", strerror(event->error_handle->esp_transport_sock_errno));
         }
         break;
     default:
@@ -84,7 +103,6 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     }
 }
 
-// Initialize MQTT Client
 esp_mqtt_client_handle_t mqtt_app_start()
 {
 
@@ -95,13 +113,21 @@ esp_mqtt_client_handle_t mqtt_app_start()
     PRINTFC_MQTT("MQTT app starting");
     PRINTFC_MQTT("key_pem after type conversion: %s", (const char *)key_pem);
     PRINTFC_MQTT("Broker address: %s", MQTT_BROKER_URI);
+<<<<<<< HEAD
     strncpy(shorter_id, player_id, 32);
+=======
+    strncpy(shorter_id, playerID, 32);
+>>>>>>> patriks
 
     const esp_mqtt_client_config_t mqtt_cfg = {
         .broker = {
             .address.uri = MQTT_BROKER_URI,
             .verification = {
+<<<<<<< HEAD
                 .certificate = (const char*)ca_server_copy,
+=======
+                .certificate = (const char*)ca_cert_pem_start,
+>>>>>>> patriks
                 .skip_cert_common_name_check = true,
             },
         },
@@ -111,7 +137,11 @@ esp_mqtt_client_handle_t mqtt_app_start()
                 .certificate = (const char*)signed_certificate,
                 .key = (const char *)key_pem,
             },
+<<<<<<< HEAD
             .client_id = player_id,
+=======
+            .client_id = playerID,
+>>>>>>> patriks
         },
         .network.timeout_ms = 10000, // Increase timeout to 10 seconds
     };
@@ -132,6 +162,7 @@ esp_mqtt_client_handle_t mqtt_app_start()
     }
 
     return client;
+<<<<<<< HEAD
 }
 
 void mqtt_message_handler(void *event_data) {
@@ -182,4 +213,6 @@ void mqtt_message_handler(void *event_data) {
     else {
         PRINTFC_MQTT("Unhandled topic: %s", event->topic);
     }
+=======
+>>>>>>> patriks
 }

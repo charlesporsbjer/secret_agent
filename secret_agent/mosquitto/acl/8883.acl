@@ -1,0 +1,20 @@
+<<<<<<< HEAD:mqtt-docker/mosquitto/acl/8883.acl
+user server
+topic readwrite /myndigheten
+topic readwrite /torget
+pattern write /spelare/+/downlink
+pattern read /spelare/+/uplink
+=======
+user user
+topic write hello/world
+topic read world/hello
+topic read world/+
+
+user user2
+topic write hello2/world2
+
+user superuser
+topic readwrite hello/+/world
+
+pattern readwrite hello/%u/world
+>>>>>>> patriks:secret_agent/mosquitto/acl/8883.acl

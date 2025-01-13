@@ -1,3 +1,7 @@
 key,type,encoding,value
 certs,namespace,,
+<<<<<<< HEAD
 cert,file,string,./cert/ca_server_copy.crt
+=======
+cert,file,string,./cert/ca.crt
+>>>>>>> patriks

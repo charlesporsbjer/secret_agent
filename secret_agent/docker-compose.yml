@@ -1,0 +1,19 @@
+services:
+  app-server:
+    image: app-server
+    depends_on:
+      - mosquitto
+    ports:
+      - "8081:8081"
+      - "9191:9191"
+
+  mosquitto:
+    image: eclipse-mosquitto
+    container_name: mosquitto
+    ports:
+      - "8883:8883"
+      - "8884:8884"
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - ./mosquitto/acl:/mosquitto/acl
+      - ./cert:/mosquitto/cert
