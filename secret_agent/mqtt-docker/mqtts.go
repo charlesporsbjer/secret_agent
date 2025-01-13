@@ -119,7 +119,7 @@ var mqttClient mqtt.Client
 
 func startBrokerClient() {
 	opts := mqtt.NewClientOptions().
-		AddBroker("mqtt://172.16.218.255:8883").
+		AddBroker("mqtt://192.168.0.155:8883").
 		SetClientID("server").SetUsername("server").SetPassword("mosquitto")
 
 	mqttClient = mqtt.NewClient(opts)

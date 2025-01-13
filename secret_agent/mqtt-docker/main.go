@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	go startBrokerClient()
+	//go startBrokerClient()
 	startHTTPSServer()
 
 	// Just to keep main() alive for demonstration
