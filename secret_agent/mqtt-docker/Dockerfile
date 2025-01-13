@@ -19,6 +19,7 @@ COPY names.txt names.txt
 COPY --from=build-stage /server /server
 
 EXPOSE 9191
-EXPOSE 8883
+EXPOSE 8885
+
 
 ENTRYPOINT [ "/server" ]
