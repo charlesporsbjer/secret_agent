@@ -39,15 +39,14 @@ void serial_task(void *pvParameters)
 
     while (1)
     {
-
         char* input_string = read_uart_data(data, input_buffer, &buffer_index);
         if (input_string != NULL) {
             // Process the received string here
             printf("\n Processed: %s\n", input_string);
+
         }
-        vTaskDelay(pdMS_TO_TICKS(100));  // Optional delay
-    
-                    
+        vTaskDelay(pdMS_TO_TICKS(50));  // Optional delay
+                   
     }
     vTaskDelete(NULL);
 }

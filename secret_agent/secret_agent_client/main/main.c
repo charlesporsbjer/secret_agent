@@ -12,6 +12,10 @@
 
 #define SERIAL_MSG_BUF_SIZE 1024
 
+char signed_certificate[2048];
+char shorter_id[32] = {0};
+char playerID[256] = "p1";
+
 
 QueueHandle_t mqtt_event_queue;
 QueueHandle_t serial_msg_queue;
@@ -48,7 +52,7 @@ void app_main(void)
 
     PRINTFC_MAIN("Creating event group");
     wifi_event_group = xEventGroupCreate();
-    xSemaphore_wifi_event = xSemaphoreCreateMutex();
+ 
     w_param.wifi_event_group = wifi_event_group;
     c_param.wifi_event_group = wifi_event_group;
 

@@ -2,6 +2,8 @@
 #include "printer_helper.h"
 #include "string.h"
 
+uint8_t key_pem[2048];
+
 int generate_csr(char *csr_buf, size_t csr_buf_size, const char *subject_name)
 {
     int ret;

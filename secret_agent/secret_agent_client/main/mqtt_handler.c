@@ -58,3 +58,52 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         break;
     }
 }
+
+esp_mqtt_client_handle_t mqtt_app_start()
+{
+
+    esp_log_level_set("esp-tls", ESP_LOG_DEBUG);
+    esp_log_level_set("mbedtls", ESP_LOG_DEBUG);
+    
+    xEventGroupWaitBits(wifi_event_group, BIT0 | BIT1 | BIT2, pdFALSE, pdTRUE, portMAX_DELAY);
+    PRINTFC_MQTT("MQTT app starting");
+    PRINTFC_MQTT("key_pem after type conversion: %s", (const char *)key_pem);
+    PRINTFC_MQTT("Broker address: %s", MQTT_BROKER_URI);
+    strncpy(shorter_id, playerID, 32);
+
+    const esp_mqtt_client_config_t mqtt_cfg = {
+        .broker = {
+            .address.uri = MQTT_BROKER_URI,
+            .verification = {
+                .certificate = (const char*)ca_cert_pem_start,
+                .skip_cert_common_name_check = true,
+            },
+        },
+
+        .credentials = {
+            .authentication = {
+                .certificate = (const char*)signed_certificate,
+                .key = (const char *)key_pem,
+            },
+            .client_id = playerID,
+        },
+        .network.timeout_ms = 10000, // Increase timeout to 10 seconds
+    };
+        
+    esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_cfg);
+    if (client == NULL) {
+        PRINTFC_MQTT("Failed to initialize MQTT client");
+        return NULL;
+    }
+
+    /* The last argument may be used to pass data to the event handler, in this example mqtt_event_handler */
+    esp_mqtt_client_register_event(client, ESP_EVENT_ANY_ID, mqtt_event_handler, NULL);
+
+    esp_err_t err = esp_mqtt_client_start(client);
+    if (err != ESP_OK) {
+        PRINTFC_MQTT("Failed to start MQTT client: %s", esp_err_to_name(err));
+        return NULL;
+    }
+
+    return client;
+}

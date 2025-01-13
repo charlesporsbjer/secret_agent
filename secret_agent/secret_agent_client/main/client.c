@@ -3,29 +3,12 @@
 #include "mbedtls/x509_csr.h"
 #include "mbedtls/pem.h"
 #include "esp_http_client.h"
-#include "certs.h"
-#include "mqtt_handler.h"
-#include "serial.h"
-#include "chat.h"
-#include "freertos/queue.h"
-#include "shared_resources.h"
 #include "generate_csr.h"
 #include "esp_err.h"
 
-//#define SERVER_URL "https://localhost:9191/spelare/register"
-//172.16.219.34
-#define CSR_ENDPOINT "https://"SERVER_IP":9191/spelare/csr"
-
-//#define SERVER_IP "172.16.219.34"   //patrik
-#define SERVER_IP "192.168.0.127" //HEMMA
-#define SERVER_REGISTER "https://" SERVER_IP ":9191/spelare/register"
-#define SERVER_START "https://" SERVER_IP ":9191/start"
-#define SERVER_TEST "https://" SERVER_IP ":9191/spelare/test"
-#define SERVER_URL "https://" SERVER_IP ":9191/spelare/register"
 
 #define TAG "client"
 
-char* playerID = "p1";
 esp_mqtt_client_handle_t mqtt_client;
 
 void client_task(void *p)
@@ -51,7 +34,7 @@ void client_task(void *p)
  
 
     // Start chat task
-    xTaskCreate(chat_task, "chat task", 8192, mqtt_client, 4, NULL);
+  //  xTaskCreate(chat_task, "chat task", 8192, mqtt_client, 4, NULL);
 
 
     while(1){
@@ -76,7 +59,7 @@ void register_player()
             .cert_pem = (const char*)ca_cert_pem_start,
             .timeout_ms = 10000,
             .method = HTTP_METHOD_POST,
-            .event_handler = http
+            .event_handler = http_event_handler,
         // .skip_cert_common_name_check = false,
                 };
 
@@ -174,16 +157,5 @@ esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
     return ESP_OK;
 }
 
-mqtt_app_start()
-{
-    esp_mqtt_client_config_t mqtt_cfg = {
-        .uri = MQTT_BROKER_URI,
-        .event_handle = mqtt_event_handler,
-    };
-
-    esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_cfg);
-    esp_mqtt_client_start(client);
-    return client;
-}
 
 
