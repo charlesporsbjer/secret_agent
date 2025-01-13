@@ -1,0 +1,5 @@
+user server
+topic readwrite /myndigheten
+topic readwrite /torget
+pattern write /spelare/+/downlink
+pattern read /spelare/+/uplink
