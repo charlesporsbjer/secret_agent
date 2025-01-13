@@ -5,6 +5,7 @@
 #include "printer_helper.h"
 #include "string.h"
 #include "shared_resources.h"
+#include "stdio.h"
 
 #define UART_NUM UART_NUM_0
 #define BUF_SIZE 1024
@@ -14,9 +15,6 @@
 void serial_task(void *pvParameters)
 {
     PRINTFC_SERIAL("Serial task started");
-
-    uint8_t data[BUF_SIZE];
-    uart_event_t event;
 
     // UART configuration
     const uart_config_t uart_config = {
@@ -28,6 +26,10 @@ void serial_task(void *pvParameters)
         .rx_flow_ctrl_thresh = 122,
     };
 
+    uint8_t data[128];
+    char input_buffer[128] = {0};
+    int buffer_index = 0;
+
     // Install UART driver
     ESP_ERROR_CHECK(uart_param_config(UART_NUM, &uart_config));
     uart_set_pin(UART_NUM, TX_PIN, RX_PIN, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
@@ -37,49 +39,42 @@ void serial_task(void *pvParameters)
 
     while (1)
     {
-        // Wait for UART event
-        if (xQueueReceive(serial_msg_queue, (void *)&event, portMAX_DELAY) == pdTRUE)
-        {
-            switch (event.type)
-            {
-                case UART_DATA:
-                    memset(data, 0, sizeof(data));
-                    uart_read_bytes(UART_NUM, data, event.size, pdTICKS_TO_MS(500));
-                    data[event.size] = '\0'; // Ensure null-termination
-                    PRINTFC_SERIAL("Received %d bytes", event.size);
-                    PRINTFC_SERIAL("Data: %s", data);
 
-                    // Echo the data back
-                    uart_write_bytes(UART_NUM, (const char *)data, event.size);
-                    
-                    break;
-
-                case UART_FIFO_OVF:
-                    PRINTFC_SERIAL("UART FIFO overflow");
-                    uart_flush_input(UART_NUM);
-                    xQueueReset(serial_msg_queue);
-                    break;
-
-                case UART_BUFFER_FULL:
-                    PRINTFC_SERIAL("UART buffer full");
-                    uart_flush_input(UART_NUM);
-                    xQueueReset(serial_msg_queue);
-                    break;
-
-                case UART_PARITY_ERR:
-                    PRINTFC_SERIAL("UART parity error");
-                    break;
-
-                case UART_FRAME_ERR:
-                    PRINTFC_SERIAL("UART frame error");
-                    break;
-
-                default:
-                    PRINTFC_SERIAL("UART event type: %d", event.type);
-                    break;
-            }
+        char* input_string = read_uart_data(data, input_buffer, &buffer_index);
+        if (input_string != NULL) {
+            // Process the received string here
+            printf("\n Processed: %s\n", input_string);
         }
-        vTaskDelay(pdMS_TO_TICKS(1000)); // Adjust the delay as needed
+        vTaskDelay(pdMS_TO_TICKS(100));  // Optional delay
+    
+                    
     }
     vTaskDelete(NULL);
+}
+
+char* read_uart_data(uint8_t* data, char* input_buffer, int* buffer_index) {
+
+    int len = uart_read_bytes(UART_NUM_0, data, 128, pdMS_TO_TICKS(100));  //nått kan va knas här med pdms
+    if (len > 0) {
+        for (int i = 0; i < len; i++) {
+            if (data[i] == '\n' || data[i] == '\r') {  // End of input
+                input_buffer[*buffer_index] = '\0';   // Null-terminate
+                *buffer_index = 0;                   // Reset index
+                return input_buffer;                // Return the string
+            } else {
+                if (*buffer_index < 127) {
+                    input_buffer[*buffer_index] = data[i];
+                    printf("%c", data[i]);
+                    fflush(stdout);
+                    (*buffer_index)++;
+                } else {
+                    // Buffer overflow
+                    printf("Error: Input buffer overflow. Resetting.\n");
+                    fflush(stdout);
+                    *buffer_index = 0;               // Reset index
+                }
+            }
+        }
+    }
+    return NULL;  // No complete line received yet
 }
