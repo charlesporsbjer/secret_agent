@@ -20,15 +20,15 @@ void client_task(void *p)
 
     // Start serial task
     PRINTFC_CLIENT("Starting serial task");
-    xTaskCreate(serial_task, "serial task", 16384, NULL, 5, NULL);
+   // xTaskCreate(serial_task, "serial task", 16384, NULL, 5, NULL);
     PRINTFC_CLIENT("Returned from serial task");
 
-    xTaskCreate(serial_task, "serial task", 8192, NULL, 5, NULL);
+  //  xTaskCreate(serial_task, "serial task", 8192, NULL, 5, NULL);
 
      register_player();
     // Generate and send CSR
 
-     send_csr();
+   //  send_csr();
 
     mqtt_client = mqtt_app_start();
  
@@ -38,7 +38,8 @@ void client_task(void *p)
 
 
     while(1){
-        vTaskDelay(100/ portTICK_PERIOD_MS);
+        register_player();
+        vTaskDelay(500/ portTICK_PERIOD_MS);
     }
     
     vTaskDelete(NULL);
@@ -60,8 +61,27 @@ void register_player()
             .timeout_ms = 10000,
             .method = HTTP_METHOD_POST,
             .event_handler = http_event_handler,
-        // .skip_cert_common_name_check = false,
+            .skip_cert_common_name_check = true,
                 };
+
+                /*
+
+
+            esp_http_client_handle_t client = esp_http_client_init(&config);
+
+            if (client == NULL) {
+                PRINTFC_CLIENT("Failed to initialize HTTP client");
+                return;
+            }
+            char* json = "{}";
+            size_t json_len =sizeof(json);
+
+            esp_http_client_set_header(client, "Content-Type", "application/json");
+            esp_http_client_set_post_field(client, json, json_len); 
+
+                        
+                
+                */
 
     esp_http_client_handle_t client = esp_http_client_init(&config);
 

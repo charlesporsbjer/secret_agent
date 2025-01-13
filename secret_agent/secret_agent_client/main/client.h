@@ -13,11 +13,10 @@
 
 #define CSR_ENDPOINT "https://" SERVER_IP ":9191/spelare/csr"
 
-#define SERVER_IP "192.168.0.127" //HEMMA
-#define SERVER_REGISTER "https://" SERVER_IP ":9191/spelare/register"
+#define SERVER_IP "192.168.0.155" //HEMMA
+#define SERVER_REGISTER "https://" SERVER_IP ":9191/spelare"
 #define SERVER_START "https://" SERVER_IP ":9191/start"
-#define SERVER_TEST "https://" SERVER_IP ":9191/spelare/test"
-#define SERVER_URL "https://" SERVER_IP ":9191/spelare/register"
+#define SERVER_URL "https://" SERVER_IP ":9191"
 
 typedef struct client_init_param_t {
     EventGroupHandle_t wifi_event_group;
