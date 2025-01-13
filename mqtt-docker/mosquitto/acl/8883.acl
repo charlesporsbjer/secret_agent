@@ -1,21 +1,5 @@
-# Allow everyone to read from /torget
-topic read /torget
-# Allow everyone to write to /torget
-topic write /torget
-
-# Allow server to write to /myndigheten
 user server
-topic write /myndigheten
-
-# Allow everyone to read from /myndigheten
-topic read /myndigheten
-
-# Allow only the player with index n to write to their uplink
-pattern write /spelare/%u/uplink
-# Allow only the player with index n to read from their downlink
-pattern read /spelare/%u/downlink
-
-# Uncomment and replace "server" with the server's username to enforce server-only access
-user server
-topic write /spelare/+/downlink
-topic read /spelare/+/uplink
+topic readwrite /myndigheten
+topic readwrite /torget
+pattern write /spelare/+/downlink
+pattern read /spelare/+/uplink
