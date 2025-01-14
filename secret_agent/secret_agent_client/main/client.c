@@ -90,6 +90,11 @@ void register_player()
         return;
     }
 
+    char* json = "{}";
+    size_t json_len =sizeof(json);
+    esp_http_client_set_header(client, "Content-Type", "application/json");
+    esp_http_client_set_post_field(client, json, json_len);
+
     esp_http_client_set_method(client, HTTP_METHOD_POST);
     esp_err_t err = esp_http_client_perform(client);
     esp_http_client_cleanup(client);

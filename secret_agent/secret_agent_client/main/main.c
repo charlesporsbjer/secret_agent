@@ -9,6 +9,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "esp_log.h"
+#include "certs.h"
 
 #define SERIAL_MSG_BUF_SIZE 1024
 
@@ -28,6 +29,11 @@ wifi_init_param_t w_param = {
     .password = CONFIG_WIFI_PASSWORD,
     
 };
+void print_embedded_certificate(void)
+{
+    PRINTFC_MAIN("Embedded certificate: %s", (const char*)ca_cert_pem_start);
+
+}
 
 void app_main(void)
 {
@@ -61,6 +67,7 @@ void app_main(void)
     mqtt_event_queue = xQueueCreate(10, sizeof(esp_mqtt_event_handle_t));
   
     
+    print_embedded_certificate();
 
     PRINTFC_MAIN("Starting all tasks");
     wifi_init_start(&w_param);
