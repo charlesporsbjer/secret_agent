@@ -1,17 +1,11 @@
 #include "mqtt_handler.h"
 
-
-
-
-
-
 static void log_error_if_nonzero(const char *message, int error_code)
 {
     if (error_code != 0) {
         PRINTFC_MQTT("Last error %s: 0x%x", message, error_code);
     }
 }
-
 
 static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)
 {
