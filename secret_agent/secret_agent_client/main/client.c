@@ -64,25 +64,6 @@ void register_player()
             .skip_cert_common_name_check = true,
                 };
 
-                /*
-
-
-            esp_http_client_handle_t client = esp_http_client_init(&config);
-
-            if (client == NULL) {
-                PRINTFC_CLIENT("Failed to initialize HTTP client");
-                return;
-            }
-            char* json = "{}";
-            size_t json_len =sizeof(json);
-
-            esp_http_client_set_header(client, "Content-Type", "application/json");
-            esp_http_client_set_post_field(client, json, json_len); 
-
-                        
-                
-                */
-
     esp_http_client_handle_t client = esp_http_client_init(&config);
 
     if (client == NULL) {
