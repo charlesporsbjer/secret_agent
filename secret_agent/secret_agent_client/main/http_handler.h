@@ -10,6 +10,7 @@
 #include "esp_event.h"
 #include "esp_system.h"
 #include "freertos/FreeRTOS.h"
+#include "esp_tls.h"
 
 #define MAX_HTTP_OUTPUT_BUFFER 2048
 #define MAX_HTTP_RECV_BUFFER 512
