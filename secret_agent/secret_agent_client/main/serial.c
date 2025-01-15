@@ -9,7 +9,7 @@
 
 
 #define UART_NUM UART_NUM_0
-#define BUF_SIZE 1024
+#define BUF_SIZE 256
 #define TX_PIN 16
 #define RX_PIN 17
 
@@ -52,9 +52,6 @@ void serial_task(void *pvParameters)
                     data[event.size] = '\0'; // Ensure null-termination
                     PRINTFC_SERIAL("Received %d bytes", event.size);
                     PRINTFC_SERIAL("Data: %s", data);
-
-                    // Echo the data back
-                    uart_write_bytes(UART_NUM, (const char *)data, event.size);
                     
                     int len = uart_read_bytes(UART_NUM, data, BUF_SIZE, 20 / portTICK_PERIOD_MS);
                     if (event.size > 0) {
@@ -62,26 +59,37 @@ void serial_task(void *pvParameters)
 
                         // Process commands from serial input
                         PRINTFC_SERIAL("Received command: %s", data);
-                        
+
                         // Handle choice commands
                         if (strstr((char *)data, "val ok")) {
                             PRINTFC_SERIAL("Choice: OK");
-                            esp_mqtt_client_publish(mqtt_client, TOPIC_PLAYER_Uplink, "{\"val\": \"ok\"}", 0, 1, 0);
+                            esp_mqtt_client_publish(mqtt_client, topic_player_uplink, "{\"val\": \"ok\"}", 0, 1, 0);
                         } else if (strstr((char *)data, "val neka")) {
                             PRINTFC_SERIAL("Choice: NEKA");
-                            esp_mqtt_client_publish(mqtt_client, TOPIC_PLAYER_Uplink, "{\"val\": \"neka\"}", 0, 1, 0);
+                            esp_mqtt_client_publish(mqtt_client, topic_player_uplink, "{\"val\": \"neka\"}", 0, 1, 0);
                         } else if (strstr((char *)data, "val lyckas")) {
                             PRINTFC_SERIAL("Choice: LYCKAS");
-                            esp_mqtt_client_publish(mqtt_client, TOPIC_PLAYER_Uplink, "{\"val\": \"lyckas\"}", 0, 1, 0);
+                            esp_mqtt_client_publish(mqtt_client, topic_player_uplink, "{\"val\": \"lyckas\"}", 0, 1, 0);
                         } else if (strstr((char *)data, "val sabotage")) {
                             PRINTFC_SERIAL("Choice: SABOTAGE");
-                            esp_mqtt_client_publish(mqtt_client, TOPIC_PLAYER_Uplink, "{\"val\": \"sabotage\"}", 0, 1, 0);
+                            esp_mqtt_client_publish(mqtt_client, topic_player_uplink, "{\"val\": \"sabotage\"}", 0, 1, 0);
                         } else if (strstr((char *)data, "val starta")) {
                             PRINTFC_SERIAL("Choice: STARTA SPEL");
-                            esp_mqtt_client_publish(mqtt_client, TOPIC_PLAYER_Uplink, "{\"val\": \"starta\"}", 0, 1, 0);
-                        } else if (strstr((char *)data, ":")) {
-                            PRINTFC_SERIAL("Chat message sent.");
-                            esp_mqtt_client_publish(mqtt_client, TOPIC_TORGET, (char *)data, 0, 1, 0);
+                            esp_mqtt_client_publish(mqtt_client, topic_player_uplink, "{\"val\": \"starta\"}", 0, 1, 0);
+                        } else if (data[0] == ':') {
+                            PRINTFC_SERIAL("Chat message sent: %s", (data + 1));
+                            char chat_message[512];
+                            snprintf(chat_message, sizeof(chat_message), "{\"id\": \"%s\", \"data\": \"%s\"}", shorter_id, (data + 1));
+                            esp_mqtt_client_publish(mqtt_client, TOPIC_TORGET, (char *)(chat_message), 0, 1, 0);
+                        } else if (strstr((char *)data, "reg")) {
+                            PRINTFC_SERIAL("Choice: REG_PLAYER");
+                            xEventGroupSetBits(wifi_event_group, BIT3);
+                        } else if (strstr((char *)data, "csr")) {
+                            PRINTFC_SERIAL("Choice: SEND_CSR");
+                            xEventGroupSetBits(wifi_event_group, BIT4);
+                        } else if (strstr((char *)data , "start")) {
+                            PRINTFC_SERIAL("Choice: START_GAME");
+                            xEventGroupSetBits(wifi_event_group, BIT5);
                         } else {
                             PRINTFC_SERIAL("Unknown choice command.");
                         }
@@ -115,9 +123,4 @@ void serial_task(void *pvParameters)
         vTaskDelay(pdMS_TO_TICKS(1000)); // Adjust the delay as needed
     }
     vTaskDelete(NULL);
-}
-
-void create_topic(char *topic, size_t topic_size, const char *base_topic, char* player_id) {
-    // Format the topic string based on the base topic and player ID
-    snprintf(topic, topic_size, base_topic, player_id);
 }

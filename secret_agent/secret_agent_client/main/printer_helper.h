@@ -66,6 +66,11 @@ static const char *reset = "\033[0m";
     printf(format, ##__VA_ARGS__);  \
     printf("\n")
 
+#define PRINTFC_DOWNLINK(format, ...)   \
+    PRINTFC(red, "Downlink: ");         \
+    printf(format, ##__VA_ARGS__);      \
+    printf("\n");
+
 #define PRINTFC_CSR(format, ...)    \
     PRINTFC(yellow, "CSR: ");       \
     printf(format, ##__VA_ARGS__);  \

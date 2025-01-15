@@ -9,8 +9,6 @@
 
 #define MQTT_BROKER_URI "mqtts://" SERVER_IP ":8884" // 8883 or 8884
 
-char shorter_id[32] = {0};
-
 #define MAX_MSG_LEN 128
 
 static void log_error_if_nonzero(const char *message, int error_code)
@@ -22,7 +20,9 @@ static void log_error_if_nonzero(const char *message, int error_code)
 
 static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)
 {
+#ifdef DEBUG_MODE
     PRINTFC_MQTT("Event dispatched from event loop base=%s, event_id=%" PRIi32, base, event_id);
+#endif
     esp_mqtt_event_handle_t event = event_data;
     esp_mqtt_client_handle_t client = event->client;
     int msg_id;
@@ -36,10 +36,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         // Subscribe to player-specific topics
         char uplink_topic[MAX_TOPIC_LEN];
         char downlink_topic[MAX_TOPIC_LEN];
-        snprintf(uplink_topic, sizeof(uplink_topic), "/spelare/%s/uplink", shorter_id);
         snprintf(downlink_topic, sizeof(downlink_topic), "/spelare/%s/downlink", shorter_id);
-        msg_id = esp_mqtt_client_subscribe(client, uplink_topic, 0);
-        PRINTFC_MQTT("Subscribed to %s, msg_id=%d", uplink_topic, msg_id);
         msg_id = esp_mqtt_client_subscribe(client, downlink_topic, 0);
         PRINTFC_MQTT("Subscribed to %s, msg_id=%d", downlink_topic, msg_id);
         break;
@@ -48,8 +45,6 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         break;
     case MQTT_EVENT_SUBSCRIBED:
         PRINTFC_MQTT("MQTT_EVENT_SUBSCRIBED, msg_id=%d", event->msg_id);
-        msg_id = esp_mqtt_client_publish(client, "/spelare/qos0", "data", 0, 0, 0);
-        PRINTFC_MQTT("sent publish successful, msg_id=%d", msg_id);
         break;
     case MQTT_EVENT_UNSUBSCRIBED:
         PRINTFC_MQTT("MQTT_EVENT_UNSUBSCRIBED, msg_id=%d", event->msg_id);
@@ -58,12 +53,8 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         PRINTFC_MQTT("MQTT_EVENT_PUBLISHED, msg_id=%d", event->msg_id);
         break;
     case MQTT_EVENT_DATA:
-        PRINTFC_MQTT("MQTT_EVENT_DATA");
-        PRINTFC_MQTT("TOPIC=%.*s\r", event->topic_len, event->topic);
-        PRINTFC_MQTT("DATA=%.*s\r", event->data_len, event->data);
-        
+        PRINTFC_MQTT("MQTT_EVENT_DATA, topic: %.*s\r", event->topic_len, event->topic);
         mqtt_message_handler(event_data);
-
         break;
     case MQTT_EVENT_ERROR:
         PRINTFC_MQTT("MQTT_EVENT_ERROR");
@@ -83,15 +74,16 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 // Initialize MQTT Client
 esp_mqtt_client_handle_t mqtt_app_start()
 {
-
-    esp_log_level_set("esp-tls", ESP_LOG_DEBUG);
-    esp_log_level_set("mbedtls", ESP_LOG_DEBUG);
-    
     xEventGroupWaitBits(wifi_event_group, BIT0 | BIT1 | BIT2, pdFALSE, pdTRUE, portMAX_DELAY);
     PRINTFC_MQTT("MQTT app starting");
+#ifdef DEBUG_MODE
+    esp_log_level_set("esp-tls", ESP_LOG_DEBUG);
+    esp_log_level_set("mbedtls", ESP_LOG_DEBUG);
     PRINTFC_MQTT("key_pem after type conversion: %s", (const char *)key_pem);
+#endif
     PRINTFC_MQTT("Broker address: %s", MQTT_BROKER_URI);
     strncpy(shorter_id, player_id, 32);
+    snprintf(topic_player_uplink, sizeof(topic_player_uplink), "/spelare/%s/uplink", shorter_id);
 
     const esp_mqtt_client_config_t mqtt_cfg = {
         .broker = {
@@ -132,39 +124,18 @@ esp_mqtt_client_handle_t mqtt_app_start()
 
 void mqtt_message_handler(void *event_data) {
     esp_mqtt_event_handle_t event = event_data;
+#ifdef DEBUG_MODE
+    PRINTFC_MQTT("Broker message received: \ntopic: %s \ndata: %s", event.topic, event.data);
+#endif    
     char topic[MAX_TOPIC_LEN];
     char msg[MAX_MSG_LEN];
-    int player_id;
-    int leader_id;
-
-    // Handle messages based on the topic
-    if (strcmp(event->topic, "/spelare/") == 0) {
-        if (strstr(event->data, "ok") != NULL) {
-            PRINTFC_MQTT("Player voted 'ok' for leader.");
-        } else if (strstr(event->data, "neka") != NULL) {
-            PRINTFC_MQTT("Player voted 'neka' for leader.");
-        }
-    }
-    else if (strcmp(event->topic, "/spelare/+/downlink") == 0) {
-        if (strstr(event->data, "uppdrag lyckades") != NULL) {
-            PRINTFC_MQTT("Mission succeeded, player %s led the mission.", event->data);
-        } else if (strstr(event->data, "uppdrag saboterat") != NULL) {
-            PRINTFC_MQTT("Mission was sabotaged by player %s.", event->data);
-        }
-    }
-    else if (strcmp(event->topic, "/myndigheten") == 0) {
-        // Server broadcasts updates to all players
-        if (strstr(event->data, "ny runda") != NULL) {
-            PRINTFC_MQTT("New round has started, player list: %s", event->data);
-        } else if (strstr(event->data, "val av ledare") != NULL) {
-            leader_id = atoi(event->data);  // Extract leader ID from message
-            PRINTFC_MQTT("New leader chosen: Player %d", leader_id);
-        } else if (strstr(event->data, "sparka spelare") != NULL) {
-            player_id = atoi(event->data);  // Extract player ID from message
-            PRINTFC_MQTT("Player %d has been kicked from the game.", player_id);
-        }
-    }
-    else {
+    if (strstr(event->topic, "/torget")) {
+        PRINTFC_CHAT(event->data);
+    } else if (strstr(event->topic, "/myndigheten")) {
+        PRINTFC_MYNDIGHETEN(event_data);
+    } else if (strstr(event->topic, "/spelare/")) {
+        PRINTFC_DOWNLINK(event->data);
+    } else {
         PRINTFC_MQTT("Unhandled topic: %s", event->topic);
     }
 }
