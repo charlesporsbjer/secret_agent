@@ -19,9 +19,9 @@ void client_task(void *p)
     xEventGroupWaitBits(wifi_event_group, BIT1, pdFALSE, pdTRUE, portMAX_DELAY); // Wait for the Wi-Fi connected bit
 
     // Start serial task
-    PRINTFC_CLIENT("Starting serial task");
+  //  PRINTFC_CLIENT("Starting serial task");
    // xTaskCreate(serial_task, "serial task", 16384, NULL, 5, NULL);
-    PRINTFC_CLIENT("Returned from serial task");
+  //  PRINTFC_CLIENT("Returned from serial task");
 
   //  xTaskCreate(serial_task, "serial task", 8192, NULL, 5, NULL);
 
@@ -61,6 +61,7 @@ void register_player()
             .timeout_ms = 10000,
             .method = HTTP_METHOD_POST,
             .event_handler = http_event_handler,
+            .transport_type = HTTP_TRANSPORT_OVER_SSL,
             .skip_cert_common_name_check = true,
                 };
 
@@ -78,6 +79,11 @@ void register_player()
 
     esp_http_client_set_method(client, HTTP_METHOD_POST);
     esp_err_t err = esp_http_client_perform(client);
+    if (err == ESP_OK) {
+        PRINTFC_CLIENT("Player registered successfully.\n");
+    } else {
+        PRINTFC_CLIENT("Error registering player: %s\n", esp_err_to_name(err));
+    }
     esp_http_client_cleanup(client);
 }
 
