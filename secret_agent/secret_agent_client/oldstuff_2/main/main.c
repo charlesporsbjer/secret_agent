@@ -9,7 +9,6 @@
 #include "freertos/semphr.h"
 #include "esp_log.h"
 
-
 #define SERIAL_MSG_BUF_SIZE 1024
 
 char signed_certificate[2048];
@@ -25,15 +24,15 @@ QueueHandle_t serial_msg_queue;
 
 EventGroupHandle_t wifi_event_group;
 client_init_param_t c_param;
+
 wifi_init_param_t w_param = {
-    .ssid = "CONFIG_WIFI_SSID", // credentials
-    .password = "CONFIG_WIFI_PASSWORD", // credentials
+    .ssid = CONFIG_WIFI_SSID,
+    .password = CONFIG_WIFI_PASSWORD,
     
 };
 
 void app_main(void)
 {
-    
     PRINTFC_MAIN("Main is starting");
 
     esp_log_level_set("wifi", ESP_LOG_ERROR);
@@ -47,16 +46,21 @@ void app_main(void)
     }
     ESP_ERROR_CHECK(err);
 
+    err = nvs_flash_init_partition("eol");
+    ESP_ERROR_CHECK(err);
+
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
     PRINTFC_MAIN("Creating event group");
     wifi_event_group = xEventGroupCreate();
+    xSemaphore_wifi_event = xSemaphoreCreateMutex();
     w_param.wifi_event_group = wifi_event_group;
     c_param.wifi_event_group = wifi_event_group;
 
     // Create the queues
     serial_msg_queue = xQueueCreate(10, sizeof(char) * SERIAL_MSG_BUF_SIZE);
     xSemaphore_serial = xSemaphoreCreateMutex();
+    
     mqtt_event_queue = xQueueCreate(10, sizeof(esp_mqtt_event_handle_t));
     xSemaphore_mqtt_evt = xSemaphoreCreateMutex();
     xSemaphore_mqtt_client = xSemaphoreCreateMutex();

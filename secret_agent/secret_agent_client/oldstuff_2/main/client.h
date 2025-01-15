@@ -4,6 +4,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
 #include "mqtt_client.h"
+#include "freeRTOS/queue.h"
 #include "shared_resources.h"
 
 typedef struct client_init_param_t {

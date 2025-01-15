@@ -1,13 +1,17 @@
 #include "mqtt_handler.h"
 #include "printer_helper.h"
+#include "certs.h"
 #include "shared_resources.h"
 #include "esp_log.h"
 #include "esp_event.h"
 
 #define MAX_PLAYER_ID_LEN 32
-#define MAX_TOPIC_LEN (17 + MAX_PLAYER_ID_LEN + 1) // 17 for string + id + \0 
+#define MAX_TOPIC_LEN (17 + MAX_PLAYER_ID_LEN + 1) // 17 for base string + max player_id length + null terminator
 
-#define MQTT_BROKER_URI "mqtts://" SERVER_IP ":8884" // 8883 or 8884
+// Zainab "172.16.217.104"
+// Me 172.16.217.226
+#define BROKER_IP "172.16.217.226"
+#define MQTT_BROKER_URI "mqtts://" BROKER_IP ":8884" // 8883 or 8884
 
 char shorter_id[32] = {0};
 
@@ -139,29 +143,40 @@ void mqtt_message_handler(void *event_data) {
 
     // Handle messages based on the topic
     if (strcmp(event->topic, "/spelare/") == 0) {
+        // Example: Player sends "ok" or "neka" to vote for leader
         if (strstr(event->data, "ok") != NULL) {
             PRINTFC_MQTT("Player voted 'ok' for leader.");
+            // Update game state based on vote (e.g., add player to accepted leader list)
+            // Send update to server if needed
         } else if (strstr(event->data, "neka") != NULL) {
             PRINTFC_MQTT("Player voted 'neka' for leader.");
+            // Update game state based on vote (e.g., player rejects leader)
+            // Send update to server if needed
         }
     }
     else if (strcmp(event->topic, "/spelare/+/downlink") == 0) {
+        // Example: Server sends messages such as mission sabotage or success
         if (strstr(event->data, "uppdrag lyckades") != NULL) {
             PRINTFC_MQTT("Mission succeeded, player %s led the mission.", event->data);
+            // Handle mission success logic (e.g., update state, notify players)
         } else if (strstr(event->data, "uppdrag saboterat") != NULL) {
             PRINTFC_MQTT("Mission was sabotaged by player %s.", event->data);
+            // Handle sabotage logic (e.g., update state, notify players)
         }
     }
     else if (strcmp(event->topic, "/myndigheten") == 0) {
         // Server broadcasts updates to all players
         if (strstr(event->data, "ny runda") != NULL) {
             PRINTFC_MQTT("New round has started, player list: %s", event->data);
+            // Handle the start of a new round (e.g., update game state)
         } else if (strstr(event->data, "val av ledare") != NULL) {
             leader_id = atoi(event->data);  // Extract leader ID from message
             PRINTFC_MQTT("New leader chosen: Player %d", leader_id);
+            // Notify all players to vote for the leader
         } else if (strstr(event->data, "sparka spelare") != NULL) {
             player_id = atoi(event->data);  // Extract player ID from message
             PRINTFC_MQTT("Player %d has been kicked from the game.", player_id);
+            // Handle player removal from game
         }
     }
     else {

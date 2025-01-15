@@ -13,6 +13,19 @@ static const char *cyan = "\033[0;36m";
 static const char *white = "\033[0;37m";
 static const char *reset = "\033[0m";
 
+static void use_colors(void)
+{
+    // Fake use of color variables to avoid warnings
+    (void)black;
+    (void)red;
+    (void)green;
+    (void)yellow;
+    (void)blue;
+    (void)magenta;
+    (void)cyan;
+    (void)white;
+    (void)reset;
+}
 
 #define PRINTFC(color, format, ...) printf("%s" format "%s", color, ##__VA_ARGS__, reset)
 
@@ -34,6 +47,11 @@ static const char *reset = "\033[0m";
 #define PRINTFC_WIFI_HANDLER(format, ...) \
     PRINTFC(magenta, "WiFi Handler: ");   \
     printf(format, ##__VA_ARGS__);        \
+    printf("\n")
+
+#define PRINTFC_GAME(format, ...)   \
+    PRINTFC(cyan, "Game: ");        \
+    printf(format, ##__VA_ARGS__);  \
     printf("\n")
 
 #define PRINTFC_MSG(format, ...)    \

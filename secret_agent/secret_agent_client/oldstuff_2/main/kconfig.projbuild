@@ -11,4 +11,11 @@ menu "TLS project Configuration"
             default "mypassword"
             help
                 WiFi password (WPA or WPA2) to connect to.
+
+    config KEY_PASSWORD
+            string "Key Password"
+            default "mykey"
+            help
+                Key password for decrypting server private key.
+                
 endmenu
