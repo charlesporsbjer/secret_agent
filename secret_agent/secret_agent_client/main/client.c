@@ -25,7 +25,6 @@ void client_task(void *p)
 
   //  xTaskCreate(serial_task, "serial task", 8192, NULL, 5, NULL);
 
-     register_player();
     // Generate and send CSR
 
    //  send_csr();
@@ -60,7 +59,7 @@ void register_player()
             .cert_pem = (const char*)ca_cert_pem_start,
             .timeout_ms = 10000,
             .method = HTTP_METHOD_POST,
-            .event_handler = http_event_handler,
+          //  .event_handler = http_event_handler,
             .transport_type = HTTP_TRANSPORT_OVER_SSL,
             .skip_cert_common_name_check = true,
                 };
@@ -135,18 +134,12 @@ void mqtt_subscribe(esp_mqtt_client_handle_t client)
 
 void mqtt_publish(esp_mqtt_client_handle_t client, const char *topic, const char *message)
 {   
-    if (xSemaphoreTake(xSemaphore_mqtt_client, portMAX_DELAY) == pdTRUE) {
         int msg_id = esp_mqtt_client_publish(client, topic, message, 0, 1, 0);
         if (msg_id != -1) {
             PRINTFC_CLIENT("Message published to %s.\n", topic);
         } else {
             PRINTFC_CLIENT("Publish failed.\n");
-        }
-        xSemaphoreGive(xSemaphore_mqtt_client);
-    } 
-    else {
-        PRINTFC_CLIENT("Failed to take MQTT semaphore.\n");
-    }    
+        }  
 }
 
 esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
@@ -155,18 +148,46 @@ esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
         case MQTT_EVENT_DATA:
             PRINTFC_CLIENT("Received data: Topic=%.*s, Message=%.*s\n",
                    event->topic_len, event->topic,
-                   event->data_len, event->data);
-            // Process the message (e.g., update game state)
-            if (xSemaphoreTake(xSemaphore_mqtt_evt, portMAX_DELAY) == pdTRUE) 
-            {   
-                xQueueSend(mqtt_event_queue, event, portMAX_DELAY); // Send the event to the queue
-                xSemaphoreGive(xSemaphore_mqtt_evt); // Give back the semaphore
-            }
+                   event->data_len, event->data); 
+                xQueueSend(mqtt_event_queue, event, portMAX_DELAY); // Send the event to the queue  
             break;
         default:
             break;
     }
     return ESP_OK;
+}
+
+void http_test(){
+    
+    esp_http_client_config_t config = {
+            .url = SERVER_REGISTER,
+            .cert_pem = (const char*)ca_cert_pem_start,
+            .timeout_ms = 10000,
+            .method = HTTP_METHOD_POST,
+            .transport_type = HTTP_TRANSPORT_OVER_SSL,
+            .skip_cert_common_name_check = true,
+                };
+
+    esp_http_client_handle_t client = esp_http_client_init(&config);
+
+    if (client == NULL) {
+        PRINTFC_CLIENT("Failed to initialize HTTP client\n");
+        return;
+    }
+
+    char* json = "{}";
+    size_t json_len =sizeof(json);
+    esp_http_client_set_header(client, "Content-Type", "application/json");
+    esp_http_client_set_post_field(client, json, json_len);
+
+    esp_http_client_set_method(client, HTTP_METHOD_POST);
+    esp_err_t err = esp_http_client_perform(client);
+    if (err == ESP_OK) {
+        PRINTFC_CLIENT("Player registered successfully.\n");
+    } else {
+        PRINTFC_CLIENT("Error registering player: %s\n", esp_err_to_name(err));
+    }
+    esp_http_client_cleanup(client);
 }
 
 

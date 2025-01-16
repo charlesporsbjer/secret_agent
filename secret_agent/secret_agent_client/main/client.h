@@ -36,6 +36,8 @@ void send_server_request();
 
 void send_csr();
 
+void http_test();
+
 
 
 void mqtt_subscribe(esp_mqtt_client_handle_t client);
