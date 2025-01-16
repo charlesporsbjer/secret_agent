@@ -16,7 +16,7 @@ void client_task(void *p)
     client_init_param_t *param = (client_init_param_t *)p;
     PRINTFC_CLIENT("Client started and waiting for Wi-Fi to connect");
     // Wait for Wi-Fi to connect
-    xEventGroupWaitBits(wifi_event_group, BIT1, pdFALSE, pdTRUE, portMAX_DELAY); // Wait for the Wi-Fi connected bit
+    xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT | WIFI_HAS_IP_BIT, pdFALSE, pdTRUE, portMAX_DELAY); 
 
     // Start serial task
   //  PRINTFC_CLIENT("Starting serial task");
@@ -29,7 +29,7 @@ void client_task(void *p)
 
    //  send_csr();
 
-    mqtt_client = mqtt_app_start();
+  //  mqtt_client = mqtt_app_start();
  
 
     // Start chat task
@@ -38,7 +38,7 @@ void client_task(void *p)
 
     while(1){
         register_player();
-        vTaskDelay(500/ portTICK_PERIOD_MS);
+        vTaskDelay(5000/ portTICK_PERIOD_MS);
     }
     
     vTaskDelete(NULL);

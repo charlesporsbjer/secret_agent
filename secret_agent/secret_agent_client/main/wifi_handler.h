@@ -3,6 +3,7 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
+#include "shared_resources.h"
 
 #define WIFI_RECONNECT_MAX_ATTEMPT 100
 
