@@ -9,7 +9,6 @@
 #include "freertos/semphr.h"
 #include "esp_log.h"
 
-
 #define SERIAL_MSG_BUF_SIZE 1024
 
 char signed_certificate[2048];
@@ -28,8 +27,8 @@ QueueHandle_t serial_msg_queue;
 EventGroupHandle_t wifi_event_group;
 
 wifi_init_param_t w_param = {
-    .ssid = "SSID", 
-    .password = "PASSWORD", 
+    .ssid = "STI Student", // config macro: WIFI_SSID
+    .password = "STI1924stu", // config macro: WIFI_PASSWORD
 };
 
 void app_main(void)

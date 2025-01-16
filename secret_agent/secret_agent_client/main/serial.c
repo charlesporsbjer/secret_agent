@@ -7,7 +7,6 @@
 #include "shared_resources.h"
 #include "mqtt_client.h"
 
-
 #define UART_NUM UART_NUM_0
 #define BUF_SIZE 256
 #define TX_PIN 16
@@ -60,20 +59,23 @@ void serial_task(void *pvParameters)
                         // Process commands from serial input
                         PRINTFC_SERIAL("Received command: %s", data);
 
-                        // Handle choice commands
-                        if (strstr((char *)data, "val ok")) {
+                        // Handle choice commands:
+                        //      "/r " = http request
+                        //      "/v " = mqtt choice
+                        //      "/s " = mqtt say
+                        if (strstr((char *)data, "/v ok")) {
                             PRINTFC_SERIAL("Choice: OK");
                             esp_mqtt_client_publish(mqtt_client, topic_player_uplink, "{\"val\": \"ok\"}", 0, 1, 0);
-                        } else if (strstr((char *)data, "val neka")) {
+                        } else if (strstr((char *)data, "/v neka")) {
                             PRINTFC_SERIAL("Choice: NEKA");
                             esp_mqtt_client_publish(mqtt_client, topic_player_uplink, "{\"val\": \"neka\"}", 0, 1, 0);
-                        } else if (strstr((char *)data, "val lyckas")) {
+                        } else if (strstr((char *)data, "/v lyckas")) {
                             PRINTFC_SERIAL("Choice: LYCKAS");
                             esp_mqtt_client_publish(mqtt_client, topic_player_uplink, "{\"val\": \"lyckas\"}", 0, 1, 0);
-                        } else if (strstr((char *)data, "val sabotage")) {
+                        } else if (strstr((char *)data, "/v sabotage")) {
                             PRINTFC_SERIAL("Choice: SABOTAGE");
                             esp_mqtt_client_publish(mqtt_client, topic_player_uplink, "{\"val\": \"sabotage\"}", 0, 1, 0);
-                        } else if (strstr((char *)data, "val starta")) {
+                        } else if (strstr((char *)data, "/v starta")) {
                             PRINTFC_SERIAL("Choice: STARTA SPEL");
                             esp_mqtt_client_publish(mqtt_client, topic_player_uplink, "{\"val\": \"starta\"}", 0, 1, 0);
                         } else if (data[0] == ':') {
@@ -81,13 +83,13 @@ void serial_task(void *pvParameters)
                             char chat_message[512];
                             snprintf(chat_message, sizeof(chat_message), "{\"id\": \"%s\", \"data\": \"%s\"}", shorter_id, (data + 1));
                             esp_mqtt_client_publish(mqtt_client, TOPIC_TORGET, (char *)(chat_message), 0, 1, 0);
-                        } else if (strstr((char *)data, "reg")) {
+                        } else if (strstr((char *)data, "/r reg")) {
                             PRINTFC_SERIAL("Choice: REG_PLAYER");
                             xEventGroupSetBits(wifi_event_group, BIT3);
-                        } else if (strstr((char *)data, "csr")) {
+                        } else if (strstr((char *)data, "/r csr")) {
                             PRINTFC_SERIAL("Choice: SEND_CSR");
                             xEventGroupSetBits(wifi_event_group, BIT4);
-                        } else if (strstr((char *)data , "start")) {
+                        } else if (strstr((char *)data , "/r start")) {
                             PRINTFC_SERIAL("Choice: START_GAME");
                             xEventGroupSetBits(wifi_event_group, BIT5);
                         } else {

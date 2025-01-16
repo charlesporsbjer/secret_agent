@@ -181,8 +181,8 @@ void client_task()
     xEventGroupWaitBits(wifi_event_group, BIT0 | BIT1 | BIT2, pdFALSE, pdTRUE, portMAX_DELAY);
 
     xEventGroupWaitBits(wifi_event_group, BIT5, pdFALSE, pdTRUE, portMAX_DELAY);
-    // PRINTFC_CLIENT("Sending game start request");
-    // start_game();
+    PRINTFC_CLIENT("Sending game start request");
+    start_game();
 
     // Initialize the MQTT client and return the handle
     mqtt_client = mqtt_app_start();
@@ -284,7 +284,9 @@ void start_game()
 
     esp_http_client_config_t config = {
         .url = SERVER_START_URL,
-        .cert_pem = (const char*)signed_certificate,
+        .cert_pem = (const char *)ca_server_copy,
+        .client_cert_pem = (const char *)signed_certificate,
+        .client_key_pem = (const char *)key_pem,
         .skip_cert_common_name_check = true,
         .event_handler = _http_event_handler,
         .common_name = player_id,

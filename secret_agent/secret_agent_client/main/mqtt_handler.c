@@ -30,15 +30,24 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     case MQTT_EVENT_CONNECTED:
         PRINTFC_MQTT("MQTT_EVENT_CONNECTED");
         msg_id = esp_mqtt_client_subscribe(client, "/torget", 0);
-        PRINTFC_MQTT("Subscribed to /torget, msg_id=%d", msg_id);
+        if (msg_id == -1) {
+            PRINTFC_SERIAL("Failed to subscribe to /torget.");
+        } else 
+            PRINTFC_MQTT("Subscribed to /torget, msg_id=%d", msg_id);
         msg_id = esp_mqtt_client_subscribe(client, "/myndigheten", 0);
-        PRINTFC_MQTT("Subscribed to /myndigheten, msg_id=%d", msg_id);
+        if (msg_id == -1) {
+            PRINTFC_SERIAL("Failed to subscribe to /myndigheten.");
+        } else
+            PRINTFC_MQTT("Subscribed to /myndigheten, msg_id=%d", msg_id);
+        
         // Subscribe to player-specific topics
-        char uplink_topic[MAX_TOPIC_LEN];
         char downlink_topic[MAX_TOPIC_LEN];
         snprintf(downlink_topic, sizeof(downlink_topic), "/spelare/%s/downlink", shorter_id);
         msg_id = esp_mqtt_client_subscribe(client, downlink_topic, 0);
-        PRINTFC_MQTT("Subscribed to %s, msg_id=%d", downlink_topic, msg_id);
+        if (msg_id == -1) {
+            PRINTFC_SERIAL("Failed to subscribe to /myndigheten.");
+        } else 
+            PRINTFC_MQTT("Subscribed to %s, msg_id=%d", downlink_topic, msg_id);
         break;
     case MQTT_EVENT_DISCONNECTED:
         PRINTFC_MQTT("MQTT_EVENT_DISCONNECTED");
@@ -125,14 +134,31 @@ esp_mqtt_client_handle_t mqtt_app_start()
 void mqtt_message_handler(void *event_data) {
     esp_mqtt_event_handle_t event = event_data;
 #ifdef DEBUG_MODE
-    PRINTFC_MQTT("Broker message received: \ntopic: %s \ndata: %s", event.topic, event.data);
+    PRINTFC_MQTT("Broker message received: \ntopic: %s \ndata: %s", event->topic, event->data);
 #endif    
-    char topic[MAX_TOPIC_LEN];
-    char msg[MAX_MSG_LEN];
     if (strstr(event->topic, "/torget")) {
-        PRINTFC_CHAT(event->data);
+        char chat_msg[MAX_MSG_LEN];
+        const char *payload = event->data; // Use the payload directly
+
+        // Find the start and end of the JSON message within the payload
+        const char *msg_start = strchr(payload, '{'); // Find the opening brace
+        const char *msg_end = strchr(payload, '}');   // Find the closing brace
+
+        if (msg_start && msg_end && msg_end > msg_start) {
+            // Calculate the length of the message, ensuring it fits in chat_msg
+            int msg_len = msg_end - msg_start + 1; // Include the closing brace
+            if (msg_len < MAX_MSG_LEN) {
+                strncpy(chat_msg, msg_start, msg_len);
+                chat_msg[msg_len] = '\0'; // Null-terminate the string
+                PRINTFC_CHAT(chat_msg);   // Print the extracted message
+            } else {
+                PRINTFC_CHAT("Message too long to process.");
+            }
+        } else {
+            PRINTFC_CHAT("Malformed message received.");
+        }
     } else if (strstr(event->topic, "/myndigheten")) {
-        PRINTFC_MYNDIGHETEN(event_data);
+        PRINTFC_MYNDIGHETEN(event->data);
     } else if (strstr(event->topic, "/spelare/")) {
         PRINTFC_DOWNLINK(event->data);
     } else {
