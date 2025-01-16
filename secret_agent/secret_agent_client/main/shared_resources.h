@@ -6,8 +6,9 @@
 #include "freertos/queue.h"
 #include "mqtt_client.h"
 
-
-#define GOT_PLAYER_ID_BIT BIT10
+#define WIFI_CONNECTED_BIT BIT0
+#define WIFI_HAS_IP_BIT BIT1
+#define GOT_PLAYER_ID_BIT BIT2
 
 extern SemaphoreHandle_t xSemaphore_serial;
 extern SemaphoreHandle_t xSemaphore_mqtt_evt;

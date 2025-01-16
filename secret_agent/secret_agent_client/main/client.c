@@ -117,46 +117,6 @@ void send_csr()
     esp_http_client_cleanup(client);
 }
 
-void mqtt_subscribe(esp_mqtt_client_handle_t client)
-{   
-    if (xSemaphoreTake(xSemaphore_mqtt_client, portMAX_DELAY) == pdTRUE) {
-        int msg_id = esp_mqtt_client_subscribe(client, "/myndigheten", 0);
-        if (msg_id != -1) {
-            PRINTFC_CLIENT("Subscribed to /myndigheten successfully.\n");
-        } else {
-            PRINTFC_CLIENT("Subscription failed.\n");
-        }
-        xSemaphoreGive(xSemaphore_mqtt_client);
-    } else {
-        PRINTFC_CLIENT("Failed to take MQTT semaphore.\n");
-    }
-}
-
-void mqtt_publish(esp_mqtt_client_handle_t client, const char *topic, const char *message)
-{   
-        int msg_id = esp_mqtt_client_publish(client, topic, message, 0, 1, 0);
-        if (msg_id != -1) {
-            PRINTFC_CLIENT("Message published to %s.\n", topic);
-        } else {
-            PRINTFC_CLIENT("Publish failed.\n");
-        }  
-}
-
-esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
-{
-    switch (event->event_id) {
-        case MQTT_EVENT_DATA:
-            PRINTFC_CLIENT("Received data: Topic=%.*s, Message=%.*s\n",
-                   event->topic_len, event->topic,
-                   event->data_len, event->data); 
-                xQueueSend(mqtt_event_queue, event, portMAX_DELAY); // Send the event to the queue  
-            break;
-        default:
-            break;
-    }
-    return ESP_OK;
-}
-
 void http_test(){
     
     esp_http_client_config_t config = {
