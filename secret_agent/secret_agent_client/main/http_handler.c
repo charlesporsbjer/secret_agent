@@ -11,6 +11,7 @@ esp_err_t http_event_handler(esp_http_client_event_t *evt){
 
         case HTTP_EVENT_ERROR:
             ESP_LOGI(TAG, "HTTP_EVENT_ERROR");
+            PRINTFC_CLIENT("HTTP_EVENT_ERROR\n");
             break;
 
         case HTTP_EVENT_ON_CONNECTED:

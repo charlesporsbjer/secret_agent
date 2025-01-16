@@ -11,6 +11,8 @@
 #include "chat.h"
 #include "http_handler.h"
 
+//STI1924stu
+
 #define CSR_ENDPOINT "https://" SERVER_IP ":9191/spelare/csr"
 
 //172.16.216.182
