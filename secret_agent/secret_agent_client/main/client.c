@@ -35,10 +35,11 @@ void client_task(void *p)
     // Start chat task
   //  xTaskCreate(chat_task, "chat task", 8192, mqtt_client, 4, NULL);
 
+    register_player();
 
     while(1){
-        register_player();
-        vTaskDelay(5000/ portTICK_PERIOD_MS);
+    
+        vTaskDelay(50/ portTICK_PERIOD_MS);
     }
     
     vTaskDelete(NULL);
@@ -59,7 +60,7 @@ void register_player()
             .cert_pem = (const char*)ca_cert_pem_start,
             .timeout_ms = 10000,
             .method = HTTP_METHOD_POST,
-          //  .event_handler = http_event_handler,
+            .event_handler = http_event_handler,
             .transport_type = HTTP_TRANSPORT_OVER_SSL,
             .skip_cert_common_name_check = true,
                 };
@@ -88,7 +89,7 @@ void register_player()
 
 void send_csr()
 {
-    xEventGroupWaitBits(wifi_event_group, BIT10, pdFALSE, pdTRUE, portMAX_DELAY); // Wait for the Wi-Fi connected bit
+    xEventGroupWaitBits(wifi_event_group, GOT_PLAYER_ID_BIT, pdFALSE, pdTRUE, portMAX_DELAY); // Wait for the Wi-Fi connected bit
     char csr[2048];
     generate_csr(csr, sizeof(csr), playerID); // Use the actual player ID
 
