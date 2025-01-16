@@ -6,22 +6,14 @@
 #include "mqtt_client.h"
 #include "shared_resources.h"
 
-typedef struct client_init_param_t {
-    EventGroupHandle_t wifi_event_group;
-} client_init_param_t;
 
-void client_start(client_init_param_t *param);
+void client_start();
 
 void register_player();
 
 void send_csr(const char *csr);
 
 void start_game();
-
-void mqtt_subscribe(esp_mqtt_client_handle_t client);
-
-void mqtt_publish(esp_mqtt_client_handle_t client, const char *topic, const char *message);
-
 
 
 #endif

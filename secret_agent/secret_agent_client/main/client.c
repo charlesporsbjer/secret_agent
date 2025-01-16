@@ -88,9 +88,9 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt) {
                             memset(signed_certificate, 0, sizeof(signed_certificate));
                             strncpy(signed_certificate, cert_start, cert_len);
                             signed_certificate[cert_len] = '\0'; // Ensure null-termination
-
+#ifdef DEBUG_MODE
                             PRINTFC_CLIENT("Signed certificate: %s", signed_certificate);
-
+#endif
                             // Signal that the signed certificate has been received
                             xEventGroupSetBits(wifi_event_group, BIT2);
                         } else {
@@ -152,9 +152,8 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt) {
     return ESP_OK;
 }
 
-void client_task(void *p)
+void client_task()
 {
-    client_init_param_t *param = (client_init_param_t *)p;
     PRINTFC_CLIENT("Client started and waiting for Wi-Fi to connect");
 
     //wait wifi to connect
@@ -163,43 +162,31 @@ void client_task(void *p)
     PRINTFC_CLIENT("Starting serial task");
     xTaskCreate(serial_task, "serial task", 16384, NULL, 5, NULL);
 
+    xEventGroupWaitBits(wifi_event_group, BIT3, pdFALSE, pdTRUE, portMAX_DELAY);
     PRINTFC_CLIENT("Sending player registration request");
     register_player();
 
     // Generate and send CSR
+    xEventGroupWaitBits(wifi_event_group, BIT4, pdFALSE, pdTRUE, portMAX_DELAY);
     char csr[2048];
-    PRINTFC_CLIENT("player_id before generating CSR: %s", player_id);
     generate_csr(csr, sizeof(csr), player_id); // Use the actual player ID
+#ifdef DEBUG_MODE
+    PRINTFC_CLIENT("player_id before generating CSR: %s", player_id);
     PRINTFC_CLIENT("CSR: %s", csr);
+#endif    
     PRINTFC_CLIENT("Sending CSR");
     send_csr(csr);
 
     // wait for cert
     xEventGroupWaitBits(wifi_event_group, BIT0 | BIT1 | BIT2, pdFALSE, pdTRUE, portMAX_DELAY);
 
-    // PRINTFC_CLIENT("Sending game start request");
-    // start_game();
+    xEventGroupWaitBits(wifi_event_group, BIT5, pdFALSE, pdTRUE, portMAX_DELAY);
+    PRINTFC_CLIENT("Sending game start request");
+    start_game();
 
     // Initialize the MQTT client and return the handle
     mqtt_client = mqtt_app_start();
-    if (mqtt_client) {
-        if (xSemaphoreTake(xSemaphore_mqtt_client, portMAX_DELAY) == pdTRUE) {
-            PRINTFC_CLIENT("MQTT client initialized successfully.");
-            mqtt_subscribe(mqtt_client);
-            xSemaphoreGive(xSemaphore_mqtt_client);
-        } else {
-            PRINTFC_CLIENT("Failed to take MQTT semaphore.");
-        }
-    }
-
-    // Start chat task
-    /*if (xTaskCreate(chat_task, "chat task", 8192, (void*)mqtt_client, 4, NULL) != pdPASS) 
-    {
-        PRINTFC_CLIENT("Failed to create chat task");
-        vTaskDelete(NULL);
-        return;
-    }*/
-
+   
     while (1)
     {
         vTaskDelay(pdMS_TO_TICKS(1000));
@@ -208,20 +195,21 @@ void client_task(void *p)
     vTaskDelete(NULL);
 }
 
-void client_start(client_init_param_t *param)
+void client_start()
 {
     PRINTFC_CLIENT("Client starting");
 
-    void *p = (void *)param;
-    if (xTaskCreate(client_task, "client task", 16384, p, 5, NULL) != pdPASS) {
+    if (xTaskCreate(client_task, "client task", 16384, NULL, 5, NULL) != pdPASS) {
         PRINTFC_CLIENT("Failed to create client task");
     }
 }
 
 void register_player()
 {
-    //PRINTFC_CLIENT("ca_server_copy: %s", (const char*)ca_server_copy);
+#ifdef DEBUG_MODE
+    PRINTFC_CLIENT("ca_server_copy: %s", (const char*)ca_server_copy);
     PRINTFC_CLIENT("Register URL: %s", SERVER_REGISTER_URL);
+#endif    
     esp_http_client_config_t config = {
         .url = SERVER_REGISTER_URL,
         .cert_pem = (const char*)ca_server_copy, // Server's certificate for verification
@@ -296,7 +284,9 @@ void start_game()
 
     esp_http_client_config_t config = {
         .url = SERVER_START_URL,
-        .cert_pem = (const char*)signed_certificate,
+        .cert_pem = (const char *)ca_server_copy,
+        .client_cert_pem = (const char *)signed_certificate,
+        .client_key_pem = (const char *)key_pem,
         .skip_cert_common_name_check = true,
         .event_handler = _http_event_handler,
         .common_name = player_id,
@@ -322,53 +312,3 @@ void start_game()
     esp_http_client_cleanup(client);
 }
 
-void mqtt_subscribe(esp_mqtt_client_handle_t client)
-{   
-    if (xSemaphoreTake(xSemaphore_mqtt_client, portMAX_DELAY) == pdTRUE) {
-        int msg_id = esp_mqtt_client_subscribe(client, "/myndigheten", 0);
-        if (msg_id != -1) {
-            PRINTFC_CLIENT("Subscribed to /myndigheten successfully.");
-        } else {
-            PRINTFC_CLIENT("Subscription failed.");
-        }
-        xSemaphoreGive(xSemaphore_mqtt_client);
-    } else {
-        PRINTFC_CLIENT("Failed to take MQTT semaphore.");
-    }
-}
-
-void mqtt_publish(esp_mqtt_client_handle_t client, const char *topic, const char *message)
-{   
-    if (xSemaphoreTake(xSemaphore_mqtt_client, portMAX_DELAY) == pdTRUE) {
-        int msg_id = esp_mqtt_client_publish(client, topic, message, 0, 1, 0);
-        if (msg_id != -1) {
-            PRINTFC_CLIENT("Message published to %s.", topic);
-        } else {
-            PRINTFC_CLIENT("Publish failed.");
-        }
-        xSemaphoreGive(xSemaphore_mqtt_client);
-    } 
-    else {
-        PRINTFC_CLIENT("Failed to take MQTT semaphore.");
-    }    
-}
-
-esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
-{
-    switch (event->event_id) {
-        case MQTT_EVENT_DATA:
-            PRINTFC_CLIENT("Received data: Topic=%.*s, Message=%.*s",
-                   event->topic_len, event->topic,
-                   event->data_len, event->data);
-            // Process the message
-            if (xSemaphoreTake(xSemaphore_mqtt_evt, portMAX_DELAY) == pdTRUE) 
-            {   
-                xQueueSend(mqtt_event_queue, event, portMAX_DELAY); // Send the event to the queue
-                xSemaphoreGive(xSemaphore_mqtt_evt); // Give back the semaphore
-            }
-            break;
-        default:
-            break;
-    }
-    return ESP_OK;
-}

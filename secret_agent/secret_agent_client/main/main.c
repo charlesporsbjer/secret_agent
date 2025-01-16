@@ -9,11 +9,12 @@
 #include "freertos/semphr.h"
 #include "esp_log.h"
 
-
 #define SERIAL_MSG_BUF_SIZE 1024
 
 char signed_certificate[2048];
 char player_id[256];
+char shorter_id[32];
+char topic_player_uplink[64];
 
 SemaphoreHandle_t xSemaphore_wifi_event;
 SemaphoreHandle_t xSemaphore_serial;
@@ -24,11 +25,10 @@ QueueHandle_t mqtt_event_queue;
 QueueHandle_t serial_msg_queue;
 
 EventGroupHandle_t wifi_event_group;
-client_init_param_t c_param;
+
 wifi_init_param_t w_param = {
-    .ssid = "CONFIG_WIFI_SSID", // credentials
-    .password = "CONFIG_WIFI_PASSWORD", // credentials
-    
+    .ssid = "STI Student", // config macro: WIFI_SSID
+    .password = "STI1924stu", // config macro: WIFI_PASSWORD
 };
 
 void app_main(void)
@@ -49,10 +49,9 @@ void app_main(void)
 
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
-    PRINTFC_MAIN("Creating event group");
+    PRINTFC_MAIN("Creating wifi event group");
     wifi_event_group = xEventGroupCreate();
     w_param.wifi_event_group = wifi_event_group;
-    c_param.wifi_event_group = wifi_event_group;
 
     // Create the queues
     serial_msg_queue = xQueueCreate(10, sizeof(char) * SERIAL_MSG_BUF_SIZE);
@@ -63,6 +62,6 @@ void app_main(void)
 
     PRINTFC_MAIN("Starting all tasks");
     wifi_handler_start(&w_param);
-    client_start(&c_param);
+    client_start();
     PRINTFC_MAIN("Main is done");
 }
