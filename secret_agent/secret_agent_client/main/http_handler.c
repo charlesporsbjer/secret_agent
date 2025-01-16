@@ -68,7 +68,8 @@ esp_err_t http_event_handler(esp_http_client_event_t *evt){
             ESP_LOGI(TAG, "HTTP_EVENT_ON_FINISH");
             if (output_buffer != NULL) {
                 printf("Player ID: %.*s\n", output_len, output_buffer);
-                playerID = (char *)malloc(output_len);            
+                memcpy(playerID, output_buffer, MIN(output_len, sizeof(playerID) - 1));
+                playerID[MIN(output_len, sizeof(playerID) - 1)] = '\0'; // Ensure null-termination
                 free(output_buffer);
                 output_buffer = NULL;
             }
