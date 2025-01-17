@@ -9,6 +9,7 @@
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_HAS_IP_BIT BIT1
 #define GOT_PLAYER_ID_BIT BIT2
+#define GOT_CERTIFICATE_BIT BIT3
 
 extern SemaphoreHandle_t xSemaphore_serial;
 extern SemaphoreHandle_t xSemaphore_mqtt_evt;

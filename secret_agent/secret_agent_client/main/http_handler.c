@@ -116,7 +116,7 @@ esp_err_t http_event_handler(esp_http_client_event_t *evt){
     return ESP_OK;
 }
 
-void process_incoming_data(char *data){
+void process_incoming_data(char *data, int output_len){
 
 
      cJSON *json = cJSON_Parse(data);
@@ -125,6 +125,7 @@ void process_incoming_data(char *data){
             cJSON *id = cJSON_GetObjectItem(json, "id");
             if (id != NULL && cJSON_IsString(id)) {
                 PRINTFC_MAIN("Player ID: %s\n", id->valuestring);
+                memcpy(playerID, data, MIN(output_len, sizeof(playerID) - 1));
             } else {
                 PRINTFC_MAIN("Invalid 'id' in JSON\n");
             }
@@ -137,6 +138,8 @@ void process_incoming_data(char *data){
 
      if (strstr(data, "-----BEGIN CERTIFICATE-----") == data) {
         PRINTFC_MAIN("Certificate detected:\n%s\n", data);
+
+        save_certificate(data, output_len);
         // You can handle the certificate data here
         return;
     }
@@ -144,4 +147,10 @@ void process_incoming_data(char *data){
     // If neither JSON nor certificate, handle as unknown data
     PRINTFC_MAIN("Unknown data format:\n%s\n", data);
 
+}
+
+void save_certificate(char *data, int output_len){
+    // memcpy(signed_certificate, data, MIN(output_len, sizeof(signed_certificate) - 1));
+    // signed_certificate[MIN(output_len, sizeof(signed_certificate) - 1)] = '\0'; // Ensure null-termination
+    // xEventGroupSetBits(wifi_event_group, GOT_CERTIFICATE_BIT);
 }
