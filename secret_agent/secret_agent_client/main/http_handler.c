@@ -1,4 +1,5 @@
 #include "http_handler.h"
+#include "cJson.h"
 
 static const char *TAG = "HTTP_HANDLER";
 
@@ -32,6 +33,7 @@ esp_err_t http_event_handler(esp_http_client_event_t *evt){
                 // we are just starting to copy the output data into the use
                 memset(evt->user_data, 0, MAX_HTTP_OUTPUT_BUFFER);
             }
+            
             /*
              *  Check for chunked encoding is added as the URL for chunked encoding used in this example returns binary data.
              *  However, event handler can also be used in case chunked encoding is used.
@@ -67,9 +69,13 @@ esp_err_t http_event_handler(esp_http_client_event_t *evt){
         case HTTP_EVENT_ON_FINISH:
             ESP_LOGI(TAG, "HTTP_EVENT_ON_FINISH");
             if (output_buffer != NULL) {
-                printf("Player ID: %.*s\n", output_len, output_buffer);
-                memcpy(playerID, output_buffer, MIN(output_len, sizeof(playerID) - 1));
-                playerID[MIN(output_len, sizeof(playerID) - 1)] = '\0'; // Ensure null-termination
+
+
+
+                
+                // printf("Player ID: %.*s\n", output_len, output_buffer);
+                // memcpy(playerID, output_buffer, MIN(output_len, sizeof(playerID) - 1));
+                // playerID[MIN(output_len, sizeof(playerID) - 1)] = '\0'; // Ensure null-termination
                 free(output_buffer);
                 output_buffer = NULL;
             }
@@ -108,4 +114,34 @@ esp_err_t http_event_handler(esp_http_client_event_t *evt){
             break;          
     }
     return ESP_OK;
+}
+
+void process_incoming_data(char *data){
+
+
+     cJSON *json = cJSON_Parse(data);
+    if (json != NULL) {
+        if (cJSON_HasObjectItem(json, "id")) {
+            cJSON *id = cJSON_GetObjectItem(json, "id");
+            if (id != NULL && cJSON_IsString(id)) {
+                PRINTFC_MAIN("Player ID: %s\n", id->valuestring);
+            } else {
+                PRINTFC_MAIN("Invalid 'id' in JSON\n");
+            }
+        } else {
+            PRINTFC_MAIN("JSON does not contain 'id'\n");
+        }
+        cJSON_Delete(json); // Clean up parsed JSON
+        return;
+    }
+
+     if (strstr(data, "-----BEGIN CERTIFICATE-----") == data) {
+        PRINTFC_MAIN("Certificate detected:\n%s\n", data);
+        // You can handle the certificate data here
+        return;
+    }
+
+    // If neither JSON nor certificate, handle as unknown data
+    PRINTFC_MAIN("Unknown data format:\n%s\n", data);
+
 }

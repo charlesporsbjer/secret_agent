@@ -17,7 +17,7 @@
 
 esp_err_t http_event_handler(esp_http_client_event_t *evt);
 
-void 
+void process_incoming_data(char *data);
 
 
 

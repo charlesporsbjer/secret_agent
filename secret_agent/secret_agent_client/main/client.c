@@ -29,14 +29,14 @@ void client_task(void *p)
 
    //  send_csr();
 
-  //  mqtt_client = mqtt_app_start();
+  //  
  
 
     // Start chat task
   //  xTaskCreate(chat_task, "chat task", 8192, mqtt_client, 4, NULL);
 
     register_player();
-
+    mqtt_client = mqtt_app_start();
     while(1){
     
         vTaskDelay(50/ portTICK_PERIOD_MS);
