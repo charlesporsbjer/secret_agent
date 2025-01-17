@@ -32,8 +32,7 @@ esp_err_t http_event_handler(esp_http_client_event_t *evt){
             if (output_len == 0 && evt->user_data) {
                 // we are just starting to copy the output data into the use
                 memset(evt->user_data, 0, MAX_HTTP_OUTPUT_BUFFER);
-            }
-            
+            }           
             /*
              *  Check for chunked encoding is added as the URL for chunked encoding used in this example returns binary data.
              *  However, event handler can also be used in case chunked encoding is used.
@@ -69,13 +68,7 @@ esp_err_t http_event_handler(esp_http_client_event_t *evt){
         case HTTP_EVENT_ON_FINISH:
             ESP_LOGI(TAG, "HTTP_EVENT_ON_FINISH");
             if (output_buffer != NULL) {
-
-
-
-                
-                // printf("Player ID: %.*s\n", output_len, output_buffer);
-                // memcpy(playerID, output_buffer, MIN(output_len, sizeof(playerID) - 1));
-                // playerID[MIN(output_len, sizeof(playerID) - 1)] = '\0'; // Ensure null-termination
+                process_incoming_data(output_buffer, output_len);           
                 free(output_buffer);
                 output_buffer = NULL;
             }
@@ -96,21 +89,8 @@ esp_err_t http_event_handler(esp_http_client_event_t *evt){
             output_len = 0;
             break;
 
-///////////////////////////
-
-            case HTTP_EVENT_REDIRECT:
-            ESP_LOGD(TAG, "HTTP_EVENT_REDIRECT");
-            esp_http_client_set_header(evt->client, "From", "user@example.com");
-            esp_http_client_set_header(evt->client, "Accept", "text/html");
-            esp_http_client_set_redirection(evt->client);
-            break;
-
-            //behövs?
-
-/////////////////////////// 
-
         default:
-            PRINTFC_MAIN("HTTP_EVENT_DEFAULT");
+            PRINTFC_MAIN("HTTP_EVENT = %d\n Look it up! \n", evt->event_id);
             break;          
     }
     return ESP_OK;
@@ -126,6 +106,7 @@ void process_incoming_data(char *data, int output_len){
             if (id != NULL && cJSON_IsString(id)) {
                 PRINTFC_MAIN("Player ID: %s\n", id->valuestring);
                 memcpy(playerID, data, MIN(output_len, sizeof(playerID) - 1));
+                PRINTFC_MAIN("Player ID recieved: %s\n", playerID);
             } else {
                 PRINTFC_MAIN("Invalid 'id' in JSON\n");
             }
