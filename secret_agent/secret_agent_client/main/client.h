@@ -26,8 +26,7 @@ typedef struct client_init_param_t {
     EventGroupHandle_t wifi_event_group;
 } client_init_param_t;
 
-void client_start(client_init_param_t *param);
-
+void client_start();  //kolla om detta ens går utan att vara en task
 
 
 void register_player();

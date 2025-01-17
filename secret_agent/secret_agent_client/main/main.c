@@ -61,8 +61,8 @@ void app_main(void)
     PRINTFC_MAIN("Creating event group");
     wifi_event_group = xEventGroupCreate();
  
-    w_param.wifi_event_group = wifi_event_group;
-    c_param.wifi_event_group = wifi_event_group;
+    //w_param.wifi_event_group = wifi_event_group;
+    //c_param.wifi_event_group = wifi_event_group;
 
     // Create the queues
     serial_msg_queue = xQueueCreate(10, sizeof(char) * SERIAL_MSG_BUF_SIZE); 
@@ -74,7 +74,7 @@ void app_main(void)
     PRINTFC_MAIN("Starting all tasks");
     wifi_init_start(&w_param);
 
-    client_start(&c_param);
+    client_start();
     vTaskDelay(pdMS_TO_TICKS(1000));
     PRINTFC_MAIN("Main is done");
 }
