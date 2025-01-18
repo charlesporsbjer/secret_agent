@@ -10,6 +10,7 @@
 #define WIFI_HAS_IP_BIT BIT1
 #define GOT_PLAYER_ID_BIT BIT2
 #define GOT_CERTIFICATE_BIT BIT3
+#define MQTT_CLIEN_CONNECTED_BIT BIT4
 
 extern SemaphoreHandle_t xSemaphore_serial;
 extern SemaphoreHandle_t xSemaphore_mqtt_evt;
@@ -24,6 +25,8 @@ extern uint8_t key_pem[2048];
 extern QueueHandle_t mqtt_event_queue;
 extern QueueHandle_t serial_msg_queue;
 extern EventGroupHandle_t wifi_event_group;
+
+extern esp_mqtt_client_handle_t mqtt_client;
 
 
 

@@ -16,6 +16,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     switch ((esp_mqtt_event_id_t)event_id) {
     case MQTT_EVENT_CONNECTED:
         PRINTFC_MQTT("MQTT_EVENT_CONNECTED");
+        xEventGroupSetBits(wifi_event_group, MQTT_CLIEN_CONNECTED_BIT);
 
         // fyll ut
 
@@ -102,9 +103,8 @@ esp_mqtt_client_handle_t mqtt_app_start()
     return client;
 }
 
-void mqtt_publish(char* data){
-
-// if myndigheten etc (strstr(data, "-----BEGIN CERTIFICATE-----") == data)
-
-
+void mqtt_publish(char* data, esp_mqtt_client_handle_t client)
+{
+    esp_mqtt_client_publish(client, "/torget", data, 0, 1, 0);
+    PRINTFC_MQTT("Published data: %s", data);
 }

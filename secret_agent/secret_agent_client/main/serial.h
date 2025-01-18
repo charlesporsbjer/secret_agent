@@ -3,6 +3,8 @@
 
 #include "driver/uart.h"
 #include "stdio.h"
+#include "mqtt_handler.h"
+#include "client.h"
 
 void serial_task(void *pvParameters);
 

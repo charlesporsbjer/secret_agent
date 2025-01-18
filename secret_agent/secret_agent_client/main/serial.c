@@ -36,13 +36,16 @@ void serial_task(void *pvParameters)
     uart_driver_install(UART_NUM, BUF_SIZE * 2, BUF_SIZE * 2, 20, &serial_msg_queue, 0);
 
     PRINTFC_SERIAL("UART driver installed");
+    xEventGroupWaitBits(wifi_event_group, MQTT_CLIEN_CONNECTED_BIT, pdFALSE, pdTRUE, portMAX_DELAY);
 
     while (1)
     {
         char* input_string = read_uart_data(data, input_buffer, &buffer_index);
         if (input_string != NULL) {
-            xQueueSend(serial_msg_queue, &input_string, portMAX_DELAY);
+           // xQueueSend(serial_msg_queue, &input_string, portMAX_DELAY);
             // Process the received string here
+            mqtt_publish(input_string, mqtt_client);
+            
             printf("\n Processed: %s\n", input_string);
 
         }
