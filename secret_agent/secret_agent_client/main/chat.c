@@ -29,7 +29,7 @@ void chat_task(void* mqtt_client_p)
                     {
                         PRINTFC_SERIAL("Serial: %s", serial_msg + 3);
                         // Publish the message to the chat topic
-                        mqtt_publish(mqtt_client, "/torget", serial_msg + 3);
+                       // mqtt_publish(mqtt_client, "/torget", serial_msg + 3);
                     }
                     PRINTFC_CHAT("Chat: %s", serial_msg + 3);
                 }

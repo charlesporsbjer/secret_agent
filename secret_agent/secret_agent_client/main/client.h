@@ -41,7 +41,7 @@ void http_test();
 
 void mqtt_subscribe(esp_mqtt_client_handle_t client);
 
-void mqtt_publish(esp_mqtt_client_handle_t client, const char *topic, const char *message);
+void mqtt_publish(const char *message, esp_mqtt_client_handle_t client);
 
 
 

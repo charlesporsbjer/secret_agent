@@ -76,7 +76,7 @@ void send_csr()
 {
      // Wait for the Wi-Fi connected bit
     char csr[2048];
-    generate_csr(csr, sizeof(csr), playerID); // Use the actual player ID
+    generate_csr(csr, sizeof(csr), &playerID); // Use the actual player ID
 
     esp_http_client_config_t config = {
         .url = CSR_ENDPOINT,
@@ -136,5 +136,10 @@ void http_test(){
     esp_http_client_cleanup(client);
 }
 
+void mqtt_publish(const char* data, esp_mqtt_client_handle_t client)
+{
+    esp_mqtt_client_publish(client, "/torget", data, 0, 1, 0);
+    PRINTFC_MQTT("Published data: %s", data);
+}
 
 

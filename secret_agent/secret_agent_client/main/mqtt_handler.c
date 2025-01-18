@@ -102,9 +102,3 @@ esp_mqtt_client_handle_t mqtt_app_start()
 
     return client;
 }
-
-void mqtt_publish(char* data, esp_mqtt_client_handle_t client)
-{
-    esp_mqtt_client_publish(client, "/torget", data, 0, 1, 0);
-    PRINTFC_MQTT("Published data: %s", data);
-}
