@@ -41,11 +41,12 @@ void serial_task(void *pvParameters)
     {
         char* input_string = read_uart_data(data, input_buffer, &buffer_index);
         if (input_string != NULL) {
+            xQueueSend(serial_msg_queue, &input_string, portMAX_DELAY);
             // Process the received string here
             printf("\n Processed: %s\n", input_string);
 
         }
-        vTaskDelay(pdMS_TO_TICKS(50));  // Optional delay
+        vTaskDelay(pdMS_TO_TICKS(20));  // Optional delay
                    
     }
     vTaskDelete(NULL);

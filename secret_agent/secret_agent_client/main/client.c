@@ -20,7 +20,7 @@ void client_start()
     // Wait for Wi-Fi to connect
     xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT | WIFI_HAS_IP_BIT, pdFALSE, pdTRUE, portMAX_DELAY); 
 
-   // xTaskCreate(serial_task, "serial task", 16384, NULL, 5, NULL);
+    xTaskCreate(serial_task, "serial task", 16384, NULL, 5, NULL);
  
     // Start chat task
   //  xTaskCreate(chat_task, "chat task", 8192, mqtt_client, 4, NULL);

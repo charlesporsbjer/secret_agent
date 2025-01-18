@@ -13,6 +13,7 @@
 void mqtt_message_handler(void *pvParameters);
 
 esp_mqtt_client_handle_t mqtt_app_start();  
+void mqtt_publish(char* data);
 
 #define MQTT_BROKER_URI "mqtts://"SERVER_IP":8883"
 

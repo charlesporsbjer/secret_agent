@@ -101,3 +101,10 @@ esp_mqtt_client_handle_t mqtt_app_start()
 
     return client;
 }
+
+void mqtt_publish(char* data){
+
+// if myndigheten etc (strstr(data, "-----BEGIN CERTIFICATE-----") == data)
+
+
+}
