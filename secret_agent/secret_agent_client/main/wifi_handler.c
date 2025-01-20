@@ -16,19 +16,11 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t e
         PRINTFC_WIFI_HANDLER("WiFi started with SSID: %s and PASS: %s", \
          ((wifi_init_param_t *)param)->ssid, \
          ((wifi_init_param_t *)param)->password);        
-       esp_err_t err =  esp_wifi_connect();
-         if(err != ESP_OK)
-         {
-             PRINTFC_WIFI_HANDLER("Failed to connect to WiFi");         
-         }
-         else
-         {
-             PRINTFC_WIFI_HANDLER("Connecting to WiFi");
-         }
+        esp_wifi_connect();
         break;
         
         PRINTFC_WIFI_HANDLER("WiFi disconnected, retrying");
-       // xEventGroupClearBits(param->wifi_event_group, WIFI_CONNECTED_BIT);
+        xEventGroupClearBits(param->wifi_event_group, WIFI_CONNECTED_BIT);
         vTaskDelay(pdMS_TO_TICKS(1000));
         esp_wifi_connect();     
         break;

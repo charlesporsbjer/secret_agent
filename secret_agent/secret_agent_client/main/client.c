@@ -33,7 +33,7 @@ void client_task(void *p)
 
    // xEventGroupWaitBits(wifi_event_group, GOT_PLAYER_ID_BIT, pdFALSE, pdTRUE, portMAX_DELAY);
 
-    //send_csr();
+    send_csr();
 
    // xEventGroupWaitBits(wifi_event_group, GOT_CERTIFICATE_BIT, pdFALSE, pdTRUE, portMAX_DELAY);
    
@@ -92,7 +92,8 @@ void client_start(client_init_param_t *param)
 }
 
 void send_csr()
-{
+{  
+    // xEventGroupWaitBits(wifi_event_group, WIFI_HAS_IP_BIT, pdFALSE, pdTRUE, portMAX_DELAY);
      // Wait for the Wi-Fi connected bit
     char csr[2048];
     generate_csr(csr, sizeof(csr), &playerID); // Use the actual player ID

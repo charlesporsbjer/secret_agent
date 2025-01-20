@@ -56,7 +56,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 
 esp_mqtt_client_handle_t mqtt_app_start()
 {
-
+    xEventGroupWaitBits(wifi_event_group, GOT_CERTIFICATE_BIT, pdFALSE, pdTRUE, portMAX_DELAY);
     esp_log_level_set("esp-tls", ESP_LOG_DEBUG);
     esp_log_level_set("mbedtls", ESP_LOG_DEBUG);
     
@@ -104,3 +104,57 @@ esp_mqtt_client_handle_t mqtt_app_start()
 
     return client;
 }
+
+/*
+
+
+esp_mqtt_client_handle_t mqtt_app_start()
+{
+    xEventGroupWaitBits(wifi_event_group, BIT0 | BIT1 | BIT2, pdFALSE, pdTRUE, portMAX_DELAY);
+    PRINTFC_MQTT("MQTT app starting");
+#ifdef DEBUG_MODE
+    esp_log_level_set("esp-tls", ESP_LOG_DEBUG);
+    esp_log_level_set("mbedtls", ESP_LOG_DEBUG);
+    PRINTFC_MQTT("key_pem after type conversion: %s", (const char *)key_pem);
+#endif
+    PRINTFC_MQTT("Broker address: %s", MQTT_BROKER_URI);
+    strncpy(shorter_id, player_id, 32);
+    snprintf(topic_player_uplink, sizeof(topic_player_uplink), "/spelare/%s/uplink", shorter_id);
+
+    const esp_mqtt_client_config_t mqtt_cfg = {
+        .broker = {
+            .address.uri = MQTT_BROKER_URI,
+            .verification = {
+                .certificate = (const char*)ca_server_copy,
+                .skip_cert_common_name_check = true,
+            },
+        },
+
+        .credentials = {
+            .authentication = {
+                .certificate = (const char*)signed_certificate,
+                .key = (const char *)key_pem,
+            },
+            .client_id = player_id,
+        },
+        .network.timeout_ms = 10000, // Increase timeout to 10 seconds
+    };
+        
+    esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_cfg);
+    if (client == NULL) {
+        PRINTFC_MQTT("Failed to initialize MQTT client");
+        return NULL;
+    }
+
+    esp_mqtt_client_register_event(client, ESP_EVENT_ANY_ID, mqtt_event_handler, NULL);
+
+    esp_err_t err = esp_mqtt_client_start(client);
+    if (err != ESP_OK) {
+        PRINTFC_MQTT("Failed to start MQTT client: %s", esp_err_to_name(err));
+        return NULL;
+    }
+
+   
+
+
+*/
