@@ -94,6 +94,8 @@ esp_mqtt_client_handle_t mqtt_app_start()
     /* The last argument may be used to pass data to the event handler, in this example mqtt_event_handler */
     esp_mqtt_client_register_event(client, ESP_EVENT_ANY_ID, mqtt_event_handler, NULL);
 
+    esp_mqtt_client_subscribe(client, "/torget", 0);
+
     esp_err_t err = esp_mqtt_client_start(client);
     if (err != ESP_OK) {
         PRINTFC_MQTT("Failed to start MQTT client: %s", esp_err_to_name(err));

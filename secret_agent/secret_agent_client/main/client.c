@@ -17,21 +17,25 @@ void client_start()
 {
    
     PRINTFC_CLIENT("Client started and waiting for Wi-Fi to connect");
-    // Wait for Wi-Fi to connect
-    xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT | WIFI_HAS_IP_BIT, pdFALSE, pdTRUE, portMAX_DELAY); 
 
-    xTaskCreate(serial_task, "serial task", 16384, NULL, 5, NULL);
+    PRINTFC_CLIENT("bits %d", WIFI_CONNECTED_BIT | WIFI_HAS_IP_BIT);
+
+
+    // Wait for Wi-Fi to connect
+   // xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT | WIFI_HAS_IP_BIT, pdFALSE, pdTRUE, portMAX_DELAY); 
+
+  //   xTaskCreate(serial_task, "serial task", 16384, NULL, 5, NULL);
  
     // Start chat task
   //  xTaskCreate(chat_task, "chat task", 8192, mqtt_client, 4, NULL);
 
     register_player();
 
-    xEventGroupWaitBits(wifi_event_group, GOT_PLAYER_ID_BIT, pdFALSE, pdTRUE, portMAX_DELAY);
+   // xEventGroupWaitBits(wifi_event_group, GOT_PLAYER_ID_BIT, pdFALSE, pdTRUE, portMAX_DELAY);
 
-    send_csr();
+    //send_csr();
 
-    xEventGroupWaitBits(wifi_event_group, GOT_CERTIFICATE_BIT, pdFALSE, pdTRUE, portMAX_DELAY);
+   // xEventGroupWaitBits(wifi_event_group, GOT_CERTIFICATE_BIT, pdFALSE, pdTRUE, portMAX_DELAY);
  
     mqtt_client = mqtt_app_start();
  
@@ -56,6 +60,8 @@ void register_player()
         PRINTFC_CLIENT("Failed to initialize HTTP client\n");
         return;
     }
+
+    PRINTFC_CLIENT("Registering player\n");
 
     char* json = "{}";
     size_t json_len =sizeof(json);
