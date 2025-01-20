@@ -67,8 +67,7 @@ void app_main(void)
 
     PRINTFC_MAIN("Starting all tasks");
     wifi_init_start(&w_param);
-
-   // client_start(&c_param);
+  //  client_start(&c_param);
     vTaskDelay(pdMS_TO_TICKS(1000));
     PRINTFC_MAIN("Main is done");
 }
