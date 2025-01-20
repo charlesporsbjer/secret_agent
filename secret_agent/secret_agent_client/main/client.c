@@ -13,9 +13,9 @@ esp_mqtt_client_handle_t mqtt_client;
 
 
 
-void client_start()
+void client_task(void *p)
 {
-   
+   client_init_param_t *param = (client_init_param_t *)p;
     PRINTFC_CLIENT("Client started and waiting for Wi-Fi to connect");
 
     PRINTFC_CLIENT("bits %d", WIFI_CONNECTED_BIT | WIFI_HAS_IP_BIT);
@@ -36,8 +36,13 @@ void client_start()
     //send_csr();
 
    // xEventGroupWaitBits(wifi_event_group, GOT_CERTIFICATE_BIT, pdFALSE, pdTRUE, portMAX_DELAY);
+   
  
     mqtt_client = mqtt_app_start();
+
+    while(1){
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
  
 }
 
@@ -76,6 +81,14 @@ void register_player()
         PRINTFC_CLIENT("Error registering player: %s\n", esp_err_to_name(err));
     }
     esp_http_client_cleanup(client);
+}
+
+void client_start(client_init_param_t *param)
+{
+    void *p = (void *)param;
+    if (xTaskCreate(client_task, "client task", 16384, p, 5, NULL) != pdPASS) {
+        PRINTFC_CLIENT("Failed to create client task");
+    }
 }
 
 void send_csr()

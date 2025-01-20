@@ -8,6 +8,7 @@
 
 static void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
 {
+   
     wifi_init_param_t *param = (wifi_init_param_t *)arg;
     switch (event_id)
     {
@@ -15,11 +16,19 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t e
         PRINTFC_WIFI_HANDLER("WiFi started with SSID: %s and PASS: %s", \
          ((wifi_init_param_t *)param)->ssid, \
          ((wifi_init_param_t *)param)->password);        
-        esp_wifi_connect();
+       esp_err_t err =  esp_wifi_connect();
+         if(err != ESP_OK)
+         {
+             PRINTFC_WIFI_HANDLER("Failed to connect to WiFi");         
+         }
+         else
+         {
+             PRINTFC_WIFI_HANDLER("Connecting to WiFi");
+         }
         break;
         
         PRINTFC_WIFI_HANDLER("WiFi disconnected, retrying");
-        xEventGroupClearBits(param->wifi_event_group, WIFI_CONNECTED_BIT);
+       // xEventGroupClearBits(param->wifi_event_group, WIFI_CONNECTED_BIT);
         vTaskDelay(pdMS_TO_TICKS(1000));
         esp_wifi_connect();     
         break;
@@ -45,7 +54,7 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t e
 
 void wifi_init_start(wifi_init_param_t *param)
 {
-    PRINTFC_WIFI_HANDLER("WiFi Handler is starting, do we need the following prints?");
+
 
     PRINTFC_WIFI_HANDLER("Using ssid: %s%s%s", green, param->ssid, reset);  // varför är dom här här?
     PRINTFC_WIFI_HANDLER("Using password: %s%s%s", green, param->password, reset); /// ?
