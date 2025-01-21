@@ -4,7 +4,7 @@
 
 uint8_t key_pem[2048];
 
-int generate_csr(char *csr_buf, size_t csr_buf_size, const char *subject_name)
+int generate_csr(char *csr_buf, size_t csr_buf_size, const char *player_id)
 {
     int ret;
     mbedtls_pk_context key;
@@ -12,6 +12,10 @@ int generate_csr(char *csr_buf, size_t csr_buf_size, const char *subject_name)
     mbedtls_entropy_context entropy;
     mbedtls_ctr_drbg_context ctr_drbg;
     const char *pers = "csr_gen";
+
+    char subject_name[256];
+
+    snprintf(subject_name, sizeof(subject_name), "CN=%s,O=STI,C=SE", player_id);
 
     mbedtls_pk_init(&key);
     mbedtls_x509write_csr_init(&req);
@@ -34,6 +38,8 @@ int generate_csr(char *csr_buf, size_t csr_buf_size, const char *subject_name)
         goto exit;
     }
 
+    PRINTFC_CLIENT("Generating the CSR\n");
+
     mbedtls_x509write_csr_set_md_alg(&req, MBEDTLS_MD_SHA256);
     mbedtls_x509write_csr_set_key(&req, &key);
 
@@ -44,6 +50,10 @@ int generate_csr(char *csr_buf, size_t csr_buf_size, const char *subject_name)
 
     if ((ret = mbedtls_x509write_csr_pem(&req, (unsigned char *)csr_buf, csr_buf_size, mbedtls_ctr_drbg_random, &ctr_drbg)) < 0) {
         PRINTFC_CLIENT("mbedtls_x509write_csr_pem returned -0x%04x\n", -ret);
+        goto exit;
+    }
+     if ((ret = mbedtls_pk_write_key_pem(&key, key_pem, sizeof(key_pem))) != 0) {
+        PRINTFC_CLIENT("Failed to write key to PEM format: -0x%04x", -ret);
         goto exit;
     }
 
