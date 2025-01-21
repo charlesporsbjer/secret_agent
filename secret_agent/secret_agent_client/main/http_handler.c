@@ -119,9 +119,15 @@ void process_incoming_data(char *data, int output_len){
     }
 
      if (strstr(data, "-----BEGIN CERTIFICATE-----") == data) {
-        PRINTFC_MAIN("Certificate detected:\n%s\n", data);
+        PRINTFC_MAIN("Certificate detected\n");
 
-        save_certificate(data, output_len);
+       int err = save_certificate(data, output_len);
+       if (err == 0) {
+            xEventGroupSetBits(wifi_event_group, GOT_CERTIFICATE_BIT);
+            PRINTFC_MAIN("Certificate saved \n");
+        } else {
+            PRINTFC_MAIN("Error with certificate \n");
+        }
         // You can handle the certificate data here
         return;
     }
@@ -131,8 +137,20 @@ void process_incoming_data(char *data, int output_len){
 
 }
 
-void save_certificate(char *data, int output_len){
-    // memcpy(signed_certificate, data, MIN(output_len, sizeof(signed_certificate) - 1));
-    // signed_certificate[MIN(output_len, sizeof(signed_certificate) - 1)] = '\0'; // Ensure null-termination
-    // xEventGroupSetBits(wifi_event_group, GOT_CERTIFICATE_BIT);
+int save_certificate(char *data, int output_len){
+    
+        char *cert_end = strstr(data, "-----END CERTIFICATE-----");
+        if (cert_end) {
+            cert_end += strlen("-----END CERTIFICATE-----"); // Move to the end of the certificate
+
+        int cert_len = cert_end - data;
+        if (cert_len < sizeof(signed_certificate)) {
+            memset(signed_certificate, 0, sizeof(signed_certificate));
+            strncpy(signed_certificate, data, cert_len);
+            signed_certificate[cert_len] = '\0'; 
+            return 0;
+        }
+        return 1;  
+    }
+
 }
