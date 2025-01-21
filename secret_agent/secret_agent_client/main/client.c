@@ -101,11 +101,14 @@ void send_csr()
 
     esp_http_client_config_t config = {
         .url = CSR_ENDPOINT,
-        .cert_pem = (const char*)ca_cert_pem_start     
+        .cert_pem = (const char*)ca_cert_pem_start, 
+        .skip_cert_common_name_check = true,    
+        .event_handler = http_event_handler,
+        .common_name = playerID,
+        .timeout_ms = 10000,
     };
 
     esp_http_client_handle_t client = esp_http_client_init(&config);
-
     if (client == NULL) {
         PRINTFC_CLIENT("Failed to initialize HTTP client\n");
         return;
@@ -113,10 +116,13 @@ void send_csr()
 
     esp_http_client_set_method(client, HTTP_METHOD_POST);
     esp_http_client_set_post_field(client, csr, strlen(csr));
-    esp_err_t err = esp_http_client_perform(client);
 
+    esp_err_t err = esp_http_client_perform(client);
     if (err == ESP_OK) {
         PRINTFC_CLIENT("CSR submitted successfully.\n");
+        PRINTFC_CLIENT("HTTP Status = %d, Content-Length = %" PRId64,
+                       esp_http_client_get_status_code(client),
+                       esp_http_client_get_content_length(client));
         // Handle server response if needed (signed certificate)
     } else {
         PRINTFC_CLIENT("Error sending CSR: %s\n", esp_err_to_name(err));
