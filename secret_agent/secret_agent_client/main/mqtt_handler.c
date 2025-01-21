@@ -62,7 +62,7 @@ esp_mqtt_client_handle_t mqtt_app_start()
     
     xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT | WIFI_HAS_IP_BIT, pdFALSE, pdTRUE, portMAX_DELAY);
     PRINTFC_MQTT("MQTT app starting");
-    PRINTFC_MQTT("key_pem after type conversion: %s", (const char *)key_pem);
+ //   PRINTFC_MQTT("key_pem after type conversion: %s", (const char *)key_pem);
     PRINTFC_MQTT("Broker address: %s", MQTT_BROKER_URI);
     strncpy(shorter_id, playerID, 32);
 

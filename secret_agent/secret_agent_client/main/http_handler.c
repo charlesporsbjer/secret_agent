@@ -150,7 +150,7 @@ int save_certificate(char *data, int output_len){
             signed_certificate[cert_len] = '\0'; 
             return 0;
         }
-        return 1;  
+         
     }
-
+    return 1; 
 }
