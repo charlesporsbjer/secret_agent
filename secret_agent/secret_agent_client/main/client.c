@@ -97,6 +97,8 @@ void send_csr()
     char csr[2048];
     generate_csr(csr, sizeof(csr), &playerID); // Use the actual player ID
 
+    PRINTFC_CLIENT("Generated CSR \n");
+
     esp_http_client_config_t config = {
         .url = CSR_ENDPOINT,
         .cert_pem = (const char*)ca_cert_pem_start     

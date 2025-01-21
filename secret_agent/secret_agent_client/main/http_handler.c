@@ -107,6 +107,7 @@ void process_incoming_data(char *data, int output_len){
                 PRINTFC_MAIN("Player ID: %s\n", id->valuestring);
                 memcpy(playerID, data, MIN(output_len, sizeof(playerID) - 1));
                 PRINTFC_MAIN("Player ID recieved: %s\n", playerID);
+                xEventGroupSetBits(wifi_event_group, GOT_PLAYER_ID_BIT);
             } else {
                 PRINTFC_MAIN("Invalid 'id' in JSON\n");
             }
