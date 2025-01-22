@@ -11,7 +11,7 @@
 #define GOT_PLAYER_ID_BIT BIT2
 #define GOT_CERTIFICATE_BIT BIT3
 #define MQTT_CLIEN_CONNECTED_BIT BIT4
-
+#define GAME_STARTED_BIT BIT5
 extern SemaphoreHandle_t xSemaphore_serial;
 extern SemaphoreHandle_t xSemaphore_mqtt_evt;
 extern SemaphoreHandle_t xSemaphore_mqtt_client;

@@ -34,6 +34,8 @@ void client_task(void *p)
 
     send_csr();
 
+    start_game();
+
    // xEventGroupWaitBits(wifi_event_group, GOT_CERTIFICATE_BIT, pdFALSE, pdTRUE, portMAX_DELAY);
    
  
@@ -136,4 +138,40 @@ void mqtt_publish(const char* data, esp_mqtt_client_handle_t client)
     PRINTFC_MQTT("Published data: %s", data);
 }
 
+void start_game()
+{
+    xEventGroupWaitBits(wifi_event_group, GOT_CERTIFICATE_BIT, pdFALSE, pdTRUE, portMAX_DELAY);
+    PRINTFC_CLIENT("Game start URL: %s", SERVER_START);
+    const char *json_payload = "{\"val\": \"nu kör vi\"}";
+
+    esp_http_client_config_t config = {
+        .url = SERVER_START,
+        .cert_pem = (const char *)ca_cert_pem_start,
+        .client_cert_pem = (const char *)signed_certificate,
+        .client_key_pem = (const char *)key_pem,
+        .skip_cert_common_name_check = true,
+        .event_handler = http_event_handler,
+        .common_name = playerID,
+    };
+
+    esp_http_client_handle_t client = esp_http_client_init(&config);
+
+    if (client == NULL) {
+        PRINTFC_CLIENT("Failed to initialize HTTP client");
+        return;
+    }
+
+    esp_http_client_set_method(client, HTTP_METHOD_POST);
+    esp_http_client_set_post_field(client, json_payload, strlen(json_payload));
+    esp_err_t err = esp_http_client_perform(client);
+
+    if (err == ESP_OK) {
+        PRINTFC_CLIENT("Game start request sent successfully.");
+        xEventGroupSetBits(wifi_event_group, GAME_STARTED_BIT);
+    } else {
+        PRINTFC_CLIENT("Error starting game: %s", esp_err_to_name(err));
+    }
+
+    esp_http_client_cleanup(client);
+}
 

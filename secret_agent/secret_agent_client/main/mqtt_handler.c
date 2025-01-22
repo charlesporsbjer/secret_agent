@@ -1,4 +1,6 @@
 #include "mqtt_handler.h"
+#include "mqtt_client.h" // Add this line to include the header file that defines MQTT_PROTOCOL_V311
+#include "sdkconfig.h"
 
 static void log_error_if_nonzero(const char *message, int error_code)
 {
@@ -56,35 +58,41 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 
 esp_mqtt_client_handle_t mqtt_app_start()
 {
-    xEventGroupWaitBits(wifi_event_group, GOT_CERTIFICATE_BIT, pdFALSE, pdTRUE, portMAX_DELAY);
+    xEventGroupWaitBits(wifi_event_group,GAME_STARTED_BIT, pdFALSE, pdTRUE, portMAX_DELAY);
     esp_log_level_set("esp-tls", ESP_LOG_DEBUG);
     esp_log_level_set("mbedtls", ESP_LOG_DEBUG);
     esp_log_level_set("TRANSPORT", ESP_LOG_DEBUG);
 
     PRINTFC_MQTT("MQTT app starting");
-    PRINTFC_MQTT("key_pem after type conversion: %s", (const char *)key_pem);
-    PRINTFC_MQTT("signed_certificate after type conversion: %s", (const char *)signed_certificate);
+  //  PRINTFC_MQTT("key_pem after type conversion: %s", (const char *)key_pem);
+ //   PRINTFC_MQTT("signed_certificate after type conversion: %s", (const char *)signed_certificate);
     PRINTFC_MQTT("Broker address: %s", MQTT_BROKER_URI);
     strncpy(shorter_id, playerID, 32);
 
-    const esp_mqtt_client_config_t mqtt_cfg = {
+    esp_mqtt_client_config_t mqtt_cfg = {
         .broker = {
             .address.uri = MQTT_BROKER_URI,
             .verification = {
                 .certificate = (const char*)ca_cert_pem_start,
                 .skip_cert_common_name_check = true,
+                
             },
+    
+            
         },
 
         .credentials = {
+            
             .authentication = {
                 .certificate = (const char*)signed_certificate,
                 .key = (const char *)key_pem,
             },
             .client_id = playerID,
+            
         },
         .network.timeout_ms = 10000, // Increase timeout to 10 seconds
     };
+    mqtt_cfg.session.keepalive = 60;
         
     esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_cfg);
     if (client == NULL) {
@@ -93,9 +101,9 @@ esp_mqtt_client_handle_t mqtt_app_start()
     }
 
     /* The last argument may be used to pass data to the event handler, in this example mqtt_event_handler */
-    esp_mqtt_client_register_event(client, ESP_EVENT_ANY_ID, mqtt_event_handler, NULL);
+ //   esp_mqtt_client_register_event(client, ESP_EVENT_ANY_ID, mqtt_event_handler, NULL);
 
-    esp_mqtt_client_subscribe(client, "/torget", 0);
+  //  esp_mqtt_client_subscribe(client, "/torget", 0);
 
     esp_err_t err = esp_mqtt_client_start(client);
     if (err != ESP_OK) {

@@ -14,8 +14,7 @@ void mqtt_message_handler(void *pvParameters);
 
 esp_mqtt_client_handle_t mqtt_app_start();  
 
-#define MQTT_BROKER_TEST "mqtt://"SERVER_IP":8885"
-#define MQTT_BROKER_URI "mqtts://"SERVER_IP":8884"
+#define MQTT_BROKER_URI "mqtts://" SERVER_IP ":8884"
 
 
 #endif
