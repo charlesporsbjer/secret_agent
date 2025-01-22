@@ -49,7 +49,7 @@ void client_task(void *p)
 void register_player()
 {
    esp_http_client_config_t config = {
-            .url = SERVER_REGISTER,
+            .url = SERVER_REGISTER,   //detta HAR ÄNDRATSSSSSSS
             .cert_pem = (const char*)ca_cert_pem_start,
             .timeout_ms = 10000,
             .method = HTTP_METHOD_POST,

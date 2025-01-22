@@ -113,6 +113,7 @@ void process_incoming_data(char *data, int output_len){
             }
         } else {
             PRINTFC_MAIN("JSON does not contain 'id'\n");
+            PRINTFC_MAIN("JSON: %s\n", data);
         }
         cJSON_Delete(json); // Clean up parsed JSON
         return;
