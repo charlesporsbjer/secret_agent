@@ -17,9 +17,9 @@
 
 esp_err_t http_event_handler(esp_http_client_event_t *evt);
 
-void process_incoming_data(char *data, int len);
+void process_incoming_data(char *output_buffer, int len);
 
-int save_certificate(char *data, int output_len);
+int save_certificate(char *cert_start, int output_len);
 
 
 

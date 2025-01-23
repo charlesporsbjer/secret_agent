@@ -96,16 +96,18 @@ esp_err_t http_event_handler(esp_http_client_event_t *evt){
     return ESP_OK;
 }
 
-void process_incoming_data(char *data, int output_len){
+void process_incoming_data(char *output_buffer, int output_len){
+
+    
 
 
-     cJSON *json = cJSON_Parse(data);
+    cJSON *json = cJSON_Parse(output_buffer);
     if (json != NULL) {
         if (cJSON_HasObjectItem(json, "id")) {
             cJSON *id = cJSON_GetObjectItem(json, "id");
             if (id != NULL && cJSON_IsString(id)) {
                 PRINTFC_MAIN("Player ID: %s\n", id->valuestring);
-                memcpy(playerID, data, MIN(output_len, sizeof(playerID) - 1));
+                memcpy(playerID, output_buffer, MIN(output_len, sizeof(playerID) - 1));
                 PRINTFC_MAIN("Player ID recieved: %s\n", playerID);
                 xEventGroupSetBits(wifi_event_group, GOT_PLAYER_ID_BIT);
             } else {
@@ -113,16 +115,15 @@ void process_incoming_data(char *data, int output_len){
             }
         } else {
             PRINTFC_MAIN("JSON does not contain 'id'\n");
-            PRINTFC_MAIN("JSON: %s\n", data);
+            PRINTFC_MAIN("JSON: %s\n", output_buffer);
         }
         cJSON_Delete(json); // Clean up parsed JSON
         return;
     }
 
-     if (strstr(data, "-----BEGIN CERTIFICATE-----") == data) {
-        PRINTFC_MAIN("Certificate detected\n");
+    char *cert_start = strstr((char*)output_buffer, "-----BEGIN CERTIFICATE-----");
 
-       int err = save_certificate(data, output_len);
+       int err = save_certificate(cert_start, output_len);
        if (err == 0) {
             xEventGroupSetBits(wifi_event_group, GOT_CERTIFICATE_BIT);
             PRINTFC_MAIN("Certificate saved \n");
@@ -131,23 +132,21 @@ void process_incoming_data(char *data, int output_len){
         }
         // You can handle the certificate data here
         return;
-    }
-
-    // If neither JSON nor certificate, handle as unknown data
-    PRINTFC_MAIN("Unknown data format:\n%s\n", data);
-
 }
+    // If neither JSON nor certificate, handle as unknown data
 
-int save_certificate(char *data, int output_len){
+
+
+int save_certificate(char *cert_start, int output_len){
     
-        char *cert_end = strstr(data, "-----END CERTIFICATE-----");
+        char *cert_end = strstr(cert_start, "-----END CERTIFICATE-----");
         if (cert_end) {
             cert_end += strlen("-----END CERTIFICATE-----"); // Move to the end of the certificate
 
-        int cert_len = cert_end - data;
+        int cert_len = cert_end - cert_start;
         if (cert_len < sizeof(signed_certificate)) {
             memset(signed_certificate, 0, sizeof(signed_certificate));
-            strncpy(signed_certificate, data, cert_len);
+            strncpy(signed_certificate, cert_start, cert_len);
             signed_certificate[cert_len] = '\0'; 
             return 0;
         }

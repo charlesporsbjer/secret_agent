@@ -42,7 +42,7 @@ void client_task(void *p)
     mqtt_client = mqtt_app_start();
 
     while(1){
-        vTaskDelay(100 / portTICK_PERIOD_MS);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
  
 }
@@ -50,6 +50,7 @@ void client_task(void *p)
 // Register ESP32 as a player
 void register_player()
 {
+    xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT | WIFI_HAS_IP_BIT, pdFALSE, pdTRUE, portMAX_DELAY);
    esp_http_client_config_t config = {
             .url = SERVER_REGISTER,   //detta HAR ÄNDRATSSSSSSS
             .cert_pem = (const char*)ca_cert_pem_start,
