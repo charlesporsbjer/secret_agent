@@ -17,10 +17,9 @@
 #define SERVER_IP "192.168.0.155"
 
 //  wifi_event_group bits:
-//  BIT0:   AP_CONNECTED
-//  BIT1:   GOT_IP
-//  BIT2:   CERT_SIGNED
-//  BIT3:   REGISTER_PLAYER
+#define CERT_SIGNED BIT2
+
+#define REGISTER_PLAYER BIT3
 //  BIT4:   SEND_CSR
 //  BIT5:   START_GAME
 

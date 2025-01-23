@@ -92,7 +92,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt) {
                             PRINTFC_CLIENT("Signed certificate: %s", signed_certificate);
 #endif
                             // Signal that the signed certificate has been received
-                            xEventGroupSetBits(wifi_event_group, BIT2);
+                            xEventGroupSetBits(wifi_event_group, CERT_SIGNED);
                         } else {
                             PRINTFC_CLIENT("Error: Signed certificate buffer too small");
                         }
@@ -160,14 +160,14 @@ void client_task()
     xEventGroupWaitBits(wifi_event_group, BIT0 | BIT1, pdFALSE, pdTRUE, portMAX_DELAY);
 
     PRINTFC_CLIENT("Starting serial task");
-    xTaskCreate(serial_task, "serial task", 16384, NULL, 5, NULL);
+   // xTaskCreate(serial_task, "serial task", 16384, NULL, 5, NULL);
 
-    xEventGroupWaitBits(wifi_event_group, BIT3, pdFALSE, pdTRUE, portMAX_DELAY);
+   // xEventGroupWaitBits(wifi_event_group, BIT3, pdFALSE, pdTRUE, portMAX_DELAY);
     PRINTFC_CLIENT("Sending player registration request");
     register_player();
 
     // Generate and send CSR
-    xEventGroupWaitBits(wifi_event_group, BIT4, pdFALSE, pdTRUE, portMAX_DELAY);
+    xEventGroupWaitBits(wifi_event_group, REGISTER_PLAYER, pdFALSE, pdTRUE, portMAX_DELAY);
     char csr[2048];
     generate_csr(csr, sizeof(csr), player_id); // Use the actual player ID
 #ifdef DEBUG_MODE
@@ -178,11 +178,11 @@ void client_task()
     send_csr(csr);
 
     // wait for cert
-    xEventGroupWaitBits(wifi_event_group, BIT0 | BIT1 | BIT2, pdFALSE, pdTRUE, portMAX_DELAY);
+   
 
-    xEventGroupWaitBits(wifi_event_group, BIT5, pdFALSE, pdTRUE, portMAX_DELAY);
+    xEventGroupWaitBits(wifi_event_group, CERT_SIGNED, pdFALSE, pdTRUE, portMAX_DELAY);
     PRINTFC_CLIENT("Sending game start request");
-    start_game();
+  //  start_game();
 
     // Initialize the MQTT client and return the handle
     mqtt_client = mqtt_app_start();
@@ -234,6 +234,7 @@ void register_player()
     esp_err_t err = esp_http_client_perform(client);
 
     PRINTFC_CLIENT("Performing HTTP POST errno: %s", esp_err_to_name(err));
+    xEventGroupSetBits(wifi_event_group, REGISTER_PLAYER);
 
     esp_http_client_cleanup(client);
 }
@@ -268,6 +269,7 @@ void send_csr(const char *csr)
         PRINTFC_CLIENT("HTTP Status = %d, Content-Length = %" PRId64,
                        esp_http_client_get_status_code(client),
                        esp_http_client_get_content_length(client));
+                      
     } else {
     PRINTFC_CLIENT("Error sending CSR: %s", esp_err_to_name(err));
     }
