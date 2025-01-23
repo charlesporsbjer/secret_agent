@@ -99,10 +99,11 @@ esp_err_t http_event_handler(esp_http_client_event_t *evt){
 }
 
 void process_incoming_data(char *output_buffer, int output_len){
-
+    PRINTFC_CLIENT("Raw output buffer: %.*s", output_len, output_buffer);
     char *player_id_start = strstr((char*)output_buffer, "{\"id");
                     if (player_id_start) {
                         player_id_start += strlen("{\"id\": \"");
+                        
                         char *player_id_end = strstr(player_id_start, "\"}");
                         if (player_id_end) {
                             int player_id_len = player_id_end - player_id_start;
