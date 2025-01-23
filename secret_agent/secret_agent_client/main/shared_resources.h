@@ -17,9 +17,9 @@ extern SemaphoreHandle_t xSemaphore_mqtt_evt;
 extern SemaphoreHandle_t xSemaphore_mqtt_client;
 extern SemaphoreHandle_t xSemaphore_wifi_event;
 
-extern char* shorter_id[32];
+extern char shorter_id[32];
 extern char playerID[256];
-extern char* signed_certificate[2048];
+extern char signed_certificate[2048];
 extern uint8_t key_pem[2048];
 
 extern QueueHandle_t mqtt_event_queue;

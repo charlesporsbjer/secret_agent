@@ -111,6 +111,7 @@ void process_incoming_data(char *output_buffer, int output_len){
                                 strncpy(playerID, player_id_start, player_id_len);
                                 playerID[player_id_len] = '\0'; // Ensure null-termination
                                 PRINTFC_CLIENT("Player ID: %s", playerID);
+                                xEventGroupSetBits(wifi_event_group, GOT_PLAYER_ID_BIT);
                                 return;
                             } else {
                                 PRINTFC_CLIENT("Error: Player ID buffer too small");
@@ -122,8 +123,7 @@ void process_incoming_data(char *output_buffer, int output_len){
                         PRINTFC_CLIENT("Not a player ID response");
 
                     }
-
-    char *cert_start = strstr((char*)output_buffer, "-----BEGIN CERTIFICATE-----");
+        char *cert_start = strstr((char*)output_buffer, "-----BEGIN CERTIFICATE-----");
 
        int err = save_certificate(cert_start, output_len);
        if (err == 0) {
