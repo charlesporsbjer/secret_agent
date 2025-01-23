@@ -20,7 +20,6 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     switch ((esp_mqtt_event_id_t)event_id) {
     case MQTT_EVENT_CONNECTED:
         PRINTFC_MQTT("MQTT_EVENT_CONNECTED");
-        xEventGroupSetBits(wifi_event_group, MQTT_CLIEN_CONNECTED_BIT);
 
         // fyll ut
 
@@ -96,7 +95,7 @@ esp_mqtt_client_handle_t mqtt_app_start()
     /* The last argument may be used to pass data to the event handler, in this example mqtt_event_handler */
   //  esp_mqtt_client_register_event(client, ESP_EVENT_ANY_ID, mqtt_event_handler, NULL);
 
-    esp_mqtt_client_subscribe(client, "/torget", 0);
+
 
     esp_err_t err = esp_mqtt_client_start(client);
     if (err != ESP_OK) {

@@ -69,6 +69,8 @@ esp_err_t http_event_handler(esp_http_client_event_t *evt){
             ESP_LOGI(TAG, "HTTP_EVENT_ON_FINISH");
             if (output_buffer != NULL) {
                 process_incoming_data(output_buffer, output_len);           
+            }
+            if (output_buffer != NULL) {
                 free(output_buffer);
                 output_buffer = NULL;
             }
@@ -98,28 +100,28 @@ esp_err_t http_event_handler(esp_http_client_event_t *evt){
 
 void process_incoming_data(char *output_buffer, int output_len){
 
-    
+    char *player_id_start = strstr((char*)output_buffer, "{\"id");
+                    if (player_id_start) {
+                        player_id_start += strlen("{\"id\": \"");
+                        char *player_id_end = strstr(player_id_start, "\"}");
+                        if (player_id_end) {
+                            int player_id_len = player_id_end - player_id_start;
+                            if (player_id_len < sizeof(playerID)) {
+                                memset(playerID, 0, sizeof(playerID));
+                                strncpy(playerID, player_id_start, player_id_len);
+                                playerID[player_id_len] = '\0'; // Ensure null-termination
+                                PRINTFC_CLIENT("Player ID: %s", playerID);
+                                return;
+                            } else {
+                                PRINTFC_CLIENT("Error: Player ID buffer too small");
+                            }
+                        } else {
+                            PRINTFC_CLIENT("Error: Missing end quote for player ID");
+                        }
+                    } else {
+                        PRINTFC_CLIENT("Not a player ID response");
 
-
-    cJSON *json = cJSON_Parse(output_buffer);
-    if (json != NULL) {
-        if (cJSON_HasObjectItem(json, "id")) {
-            cJSON *id = cJSON_GetObjectItem(json, "id");
-            if (id != NULL && cJSON_IsString(id)) {
-                PRINTFC_MAIN("Player ID: %s\n", id->valuestring);
-                memcpy(playerID, output_buffer, MIN(output_len, sizeof(playerID) - 1));
-                PRINTFC_MAIN("Player ID recieved: %s\n", playerID);
-                xEventGroupSetBits(wifi_event_group, GOT_PLAYER_ID_BIT);
-            } else {
-                PRINTFC_MAIN("Invalid 'id' in JSON\n");
-            }
-        } else {
-            PRINTFC_MAIN("JSON does not contain 'id'\n");
-            PRINTFC_MAIN("JSON: %s\n", output_buffer);
-        }
-        cJSON_Delete(json); // Clean up parsed JSON
-        return;
-    }
+                    }
 
     char *cert_start = strstr((char*)output_buffer, "-----BEGIN CERTIFICATE-----");
 
@@ -132,10 +134,7 @@ void process_incoming_data(char *output_buffer, int output_len){
         }
         // You can handle the certificate data here
         return;
-}
-    // If neither JSON nor certificate, handle as unknown data
-
-
+    }
 
 int save_certificate(char *cert_start, int output_len){
     
