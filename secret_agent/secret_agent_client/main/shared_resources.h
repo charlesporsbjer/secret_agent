@@ -14,7 +14,7 @@
 #define TOPIC_TORGET "/torget"
 #define TOPIC_MYNDIGHETEN "/myndigheten"
 
-#define SERVER_IP "172.16.218.17"
+#define SERVER_IP "192.168.0.155"
 
 //  wifi_event_group bits:
 //  BIT0:   AP_CONNECTED

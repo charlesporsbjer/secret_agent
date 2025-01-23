@@ -16,7 +16,7 @@ int generate_csr(char *csr_buf, size_t csr_buf_size, const char *player_id)
     char subject_name[256];
 
     // Format the subject name with the player ID
-    snprintf(subject_name, sizeof(subject_name), "CN=%s,O=csr.chawp.com,C=SE", player_id);
+    snprintf(subject_name, sizeof(subject_name), "CN=%s,O=STI,C=SE", player_id);
     
     mbedtls_pk_init(&key);
     mbedtls_x509write_csr_init(&req);

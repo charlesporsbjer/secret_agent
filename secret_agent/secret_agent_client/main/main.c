@@ -27,8 +27,8 @@ QueueHandle_t serial_msg_queue;
 EventGroupHandle_t wifi_event_group;
 
 wifi_init_param_t w_param = {
-    .ssid = "STI Student", // config macro: WIFI_SSID
-    .password = "STI1924stu", // config macro: WIFI_PASSWORD
+    .ssid = CONFIG_WIFI_SSID, // config macro: WIFI_SSID
+    .password = CONFIG_WIFI_PASSWORD, // config macro: WIFI_PASSWORD
 };
 
 void app_main(void)
