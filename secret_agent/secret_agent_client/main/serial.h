@@ -9,5 +9,6 @@
 void serial_task(void *pvParameters);
 
 char* read_uart_data(uint8_t* data, char* input_buffer, int* buffer_index);
+void print_hex_data(uint8_t* data, int len);
 
 #endif

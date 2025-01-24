@@ -42,24 +42,31 @@ void serial_task(void *pvParameters)
     {
         char* input_string = read_uart_data(data, input_buffer, &buffer_index);
         if (input_string != NULL) {          
+            print_hex_data(data, strlen(input_string));
             // Process the received string here
-            mqtt_publish(input_string, mqtt_client);
+             
+          //  mqtt_publish(input_string, mqtt_client);
+            printf("Received command: %s\n", input_string);
             buffer_index = 0;  // Reset index   
         }
-        vTaskDelay(pdMS_TO_TICKS(20));  // Optional delay
+        vTaskDelay(pdMS_TO_TICKS(100));  // Optional delay
                    
     }
     vTaskDelete(NULL);
 }
 
+
+
 char* read_uart_data(uint8_t* data, char* input_buffer, int* buffer_index) {
     int len = uart_read_bytes(UART_NUM_0, data, 128, pdMS_TO_TICKS(100));  //nått kan va knas här med pdms
     if (len > 0) {
         for (int i = 0; i < len; i++) {
-            if (data[i] == '\n' || data[i] == '\r') {  // End of input
-                         
+            if (data[i] == '\n' || data[i] == '\r') {
+                 if(*buffer_index>0){
                     input_buffer[*buffer_index]='\0';  // Reset index
-                return input_buffer;                // Return the string
+                    *buffer_index = 0;  // Reset index
+                    return input_buffer;    
+                 }                              
             } else {
                 if (*buffer_index < 127) {
                     input_buffer[*buffer_index] = data[i];
@@ -74,4 +81,11 @@ char* read_uart_data(uint8_t* data, char* input_buffer, int* buffer_index) {
         }
     }
     return NULL;  // No complete line received yet
+}
+
+void print_hex_data(uint8_t* data, int len) {
+    for (int i = 0; i < len; i++) {
+        printf("%02x ", data[i]);
+    }
+    printf("\n");
 }

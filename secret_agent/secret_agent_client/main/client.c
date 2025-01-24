@@ -34,7 +34,7 @@ void client_task(void *p)
 
     send_csr();
 
-    start_game();
+   // start_game();
 
    // xEventGroupWaitBits(wifi_event_group, GOT_CERTIFICATE_BIT, pdFALSE, pdTRUE, portMAX_DELAY);
    
