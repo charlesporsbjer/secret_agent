@@ -35,19 +35,16 @@ void serial_task(void *pvParameters)
     uart_set_pin(UART_NUM, TX_PIN, RX_PIN, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
     uart_driver_install(UART_NUM, BUF_SIZE * 2, BUF_SIZE * 2, 20, &serial_msg_queue, 0);
 
-    PRINTFC_SERIAL("UART driver installed");
+   // PRINTFC_SERIAL("UART driver installed");
     xEventGroupWaitBits(wifi_event_group, MQTT_CLIEN_CONNECTED_BIT, pdFALSE, pdTRUE, portMAX_DELAY);
 
     while (1)
     {
         char* input_string = read_uart_data(data, input_buffer, &buffer_index);
-        if (input_string != NULL) {
-           // xQueueSend(serial_msg_queue, &input_string, portMAX_DELAY);
+        if (input_string != NULL) {          
             // Process the received string here
             mqtt_publish(input_string, mqtt_client);
-            
-          //  printf("\n Processed: %s\n", input_string);
-
+            buffer_index = 0;  // Reset index   
         }
         vTaskDelay(pdMS_TO_TICKS(20));  // Optional delay
                    
@@ -56,19 +53,16 @@ void serial_task(void *pvParameters)
 }
 
 char* read_uart_data(uint8_t* data, char* input_buffer, int* buffer_index) {
-
     int len = uart_read_bytes(UART_NUM_0, data, 128, pdMS_TO_TICKS(100));  //nått kan va knas här med pdms
     if (len > 0) {
         for (int i = 0; i < len; i++) {
             if (data[i] == '\n' || data[i] == '\r') {  // End of input
-                input_buffer[*buffer_index] = '\0';   // Null-terminate
-                *buffer_index = 0;                   // Reset index
+                         
+                    input_buffer[*buffer_index]='\0';  // Reset index
                 return input_buffer;                // Return the string
             } else {
                 if (*buffer_index < 127) {
                     input_buffer[*buffer_index] = data[i];
-                    printf("%c", data[i]);
-                    fflush(stdout);
                     (*buffer_index)++;
                 } else {
                     // Buffer overflow

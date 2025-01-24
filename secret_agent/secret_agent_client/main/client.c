@@ -34,7 +34,7 @@ void client_task(void *p)
 
     send_csr();
 
-   // start_game();
+    start_game();
 
    // xEventGroupWaitBits(wifi_event_group, GOT_CERTIFICATE_BIT, pdFALSE, pdTRUE, portMAX_DELAY);
    
@@ -136,7 +136,7 @@ void send_csr()
 void mqtt_publish(const char* data, esp_mqtt_client_handle_t client)
 {
     esp_mqtt_client_publish(client, "/torget", data, 0, 1, 0);
-    PRINTFC_MQTT("Published data: %s", data);
+   // PRINTFC_MQTT("Published data: %s", data);
 }
 
 void start_game()
