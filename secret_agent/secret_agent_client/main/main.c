@@ -15,7 +15,7 @@
 
 char  signed_certificate[2048];
 char  shorter_id[32];
-char  playerID[256];
+char playerID[256];
 
 //#define SSID "STI Student"
 //#define PASS "STI1924stu"

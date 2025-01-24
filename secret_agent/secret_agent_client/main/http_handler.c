@@ -99,32 +99,27 @@ esp_err_t http_event_handler(esp_http_client_event_t *evt){
 }
 
 void process_incoming_data(char *output_buffer, int output_len){
-    PRINTFC_CLIENT("Raw output buffer: %.*s", output_len, output_buffer);
-    char *player_id_start = strstr((char*)output_buffer, "{\"id");
-                    if (player_id_start) {
-                        player_id_start += strlen("{\"id\": \"");
-                        
-                        char *player_id_end = strstr(player_id_start, "\"}");
-                        if (player_id_end) {
-                            int player_id_len = player_id_end - player_id_start;
-                            if (player_id_len < sizeof(playerID)) {
-                                memset(playerID, 0, sizeof(playerID));
-                                strncpy(playerID, player_id_start, player_id_len);
-                                playerID[player_id_len] = '\0'; // Ensure null-termination
-                                PRINTFC_CLIENT("Player ID: %s", playerID);
-                                xEventGroupSetBits(wifi_event_group, GOT_PLAYER_ID_BIT);
-                                return;
-                            } else {
-                                PRINTFC_CLIENT("Error: Player ID buffer too small");
-                            }
-                        } else {
-                            PRINTFC_CLIENT("Error: Missing end quote for player ID");
-                        }
-                    } else {
-                        PRINTFC_CLIENT("Not a player ID response");
+     cJSON *json = cJSON_Parse(output_buffer);
+    if (json != NULL) {
+        if (cJSON_HasObjectItem(json, "id")) {
+            cJSON *id = cJSON_GetObjectItem(json, "id");
+            if (id != NULL && cJSON_IsString(id)) {
+                PRINTFC_MAIN("Player ID: %s\n", id->valuestring);
+                memcpy(playerID, id->valuestring, MIN(output_len, sizeof(playerID) - 1));
+                PRINTFC_MAIN("Player ID recieved: %s\n", playerID);
+                xEventGroupSetBits(wifi_event_group, GOT_PLAYER_ID_BIT);
+            } else {
+                PRINTFC_MAIN("Invalid 'id' in JSON\n");
+            }
+        } else {
+            PRINTFC_MAIN("JSON does not contain 'id'\n");
+            PRINTFC_MAIN("JSON: %s\n", output_buffer);
+        }
+        cJSON_Delete(json); // Clean up parsed JSON
+        return;
+    }
 
-                    }
-        char *cert_start = strstr((char*)output_buffer, "-----BEGIN CERTIFICATE-----");
+      char *cert_start = strstr((char*)output_buffer, "-----BEGIN CERTIFICATE-----");
 
        int err = save_certificate(cert_start, output_len);
        if (err == 0) {
@@ -154,3 +149,32 @@ int save_certificate(char *cert_start, int output_len){
     }
     return 1; 
 }
+
+/*
+
+ PRINTFC_CLIENT("Raw output buffer: %.*s", output_len, output_buffer);
+    char *player_id_start = strstr((char*)output_buffer, "{\"id");
+                    if (player_id_start) {
+                        player_id_start += strlen("{\"id\": \"");
+                        
+                        char *player_id_end = strstr(player_id_start, "\"}");
+                        if (player_id_end) {
+                            int player_id_len = player_id_end - player_id_start;
+                            if (player_id_len < sizeof(playerID)) {
+                                memset(playerID, 0, sizeof(playerID));
+                                strncpy(playerID, player_id_start, player_id_len);
+                                playerID[player_id_len] = '\0'; // Ensure null-termination
+                                PRINTFC_CLIENT("Player ID: %s", playerID);
+                                xEventGroupSetBits(wifi_event_group, GOT_PLAYER_ID_BIT);
+                                return;
+                            } else {
+                                PRINTFC_CLIENT("Error: Player ID buffer too small");
+                            }
+                        } else {
+                            PRINTFC_CLIENT("Error: Missing end quote for player ID");
+                        }
+                    } else {
+                        PRINTFC_CLIENT("Not a player ID response");
+
+                    }
+*/

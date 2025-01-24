@@ -46,7 +46,7 @@ void serial_task(void *pvParameters)
             // Process the received string here
             mqtt_publish(input_string, mqtt_client);
             
-            printf("\n Processed: %s\n", input_string);
+          //  printf("\n Processed: %s\n", input_string);
 
         }
         vTaskDelay(pdMS_TO_TICKS(20));  // Optional delay
