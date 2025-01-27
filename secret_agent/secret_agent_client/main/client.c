@@ -135,6 +135,9 @@ void send_csr()
 
 void mqtt_publish(const char* data, esp_mqtt_client_handle_t client)
 {
+    char subject_name[512];
+    snprintf(subject_name, sizeof(subject_name), "/spelare/%s/uplink", playerID);
+    esp_mqtt_client_publish(client, subject_name, data, 0, 1, 0);
     esp_mqtt_client_publish(client, "/torget", data, 0, 1, 0);
    // PRINTFC_MQTT("Published data: %s", data);
 }

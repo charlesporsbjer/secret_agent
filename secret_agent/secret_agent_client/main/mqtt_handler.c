@@ -22,9 +22,8 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     //    PRINTFC_MQTT("MQTT_EVENT_CONNECTED");
         xEventGroupSetBits(wifi_event_group, MQTT_CLIEN_CONNECTED_BIT);
 
-        char* test_msg = "Hello from ESP32";
         mqtt_subscribe(client);
-        esp_mqtt_client_publish(client, "/torget", test_msg, strlen(test_msg), 1, 0);
+      //  esp_mqtt_client_publish(client, "/torget", test_msg, strlen(test_msg), 1, 0);
         break;
     case MQTT_EVENT_DISCONNECTED:
      //   PRINTFC_MQTT("MQTT_EVENT_DISCONNECTED");
@@ -40,8 +39,8 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         break;
     case MQTT_EVENT_DATA:
        PRINTFC_MQTT("MQTT_EVENT_DATA");
-       PRINTFC_MQTT("TOPIC=%.*s\r\n", event->topic_len, event->topic);
-       PRINTFC_MQTT("DATA=%.*s\r\n", event->data_len, event->data);
+       PRINTFC_MQTT("TOPIC= %.*s\r\n", event->topic_len, event->topic);
+       PRINTFC_MQTT("DATA=m %.*s\r\n", event->data_len, event->data);
         break;
    case MQTT_EVENT_ERROR:
             ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
@@ -110,8 +109,12 @@ esp_mqtt_client_handle_t mqtt_app_start()
 }
 void mqtt_subscribe(esp_mqtt_client_handle_t client)
 {
+    char subject_name[512];
+    snprintf(subject_name, sizeof(subject_name), "/spelare/%s/uplink", playerID);
     PRINTFC_MQTT("Subscribing to /torget");
     int msg_id = esp_mqtt_client_subscribe(client, "/torget", 0);
     PRINTFC_MQTT("sent subscribe successful, msg_id=%d", msg_id);
      msg_id = esp_mqtt_client_subscribe(client, "/myndigheten", 0);
+     msg_id = esp_mqtt_client_subscribe(client, subject_name, 0);
+     
 }
