@@ -5,6 +5,7 @@
 #include "stdio.h"
 #include "mqtt_handler.h"
 #include "client.h"
+#include "mqtt_handler.h"
 
 void serial_task(void *pvParameters);
 

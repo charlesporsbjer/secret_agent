@@ -109,12 +109,67 @@ esp_mqtt_client_handle_t mqtt_app_start()
 }
 void mqtt_subscribe(esp_mqtt_client_handle_t client)
 {
-    char subject_name[512];
-    snprintf(subject_name, sizeof(subject_name), "/spelare/%s/uplink", playerID);
+    
+    snprintf(topic_player_uplink, sizeof(topic_player_uplink), "/spelare/%s/uplink", playerID);
     PRINTFC_MQTT("Subscribing to /torget");
     int msg_id = esp_mqtt_client_subscribe(client, "/torget", 0);
     PRINTFC_MQTT("sent subscribe successful, msg_id=%d", msg_id);
      msg_id = esp_mqtt_client_subscribe(client, "/myndigheten", 0);
-     msg_id = esp_mqtt_client_subscribe(client, subject_name, 0);
+     msg_id = esp_mqtt_client_subscribe(client, topic_player_uplink, 0);
      
 }
+
+void mqtt_torget(char* data, esp_mqtt_client_handle_t client)
+{
+    char message[512];
+    snprintf(message, sizeof(message), "{\"id\": \"%s\", \"data\": \"%s\"}", playerID, data);
+    esp_mqtt_client_publish(client, "/torget", message, 0, 1, 0);
+}
+void mqtt_uplink(char* data, esp_mqtt_client_handle_t client)
+{
+    char message[512];
+    if (strstr((char*)data, "/val ok")){
+        esp_mqtt_client_publish(mqtt_client, topic_player_uplink, "{\"val\": \"ok\"}", 0, 1, 0);
+    }
+    
+   
+}
+
+/*
+
+    if (strstr((char *)data, "/v ok")) {
+                            PRINTFC_SERIAL("Choice: OK");
+                            esp_mqtt_client_publish(mqtt_client, topic_player_uplink, "{\"val\": \"ok\"}", 0, 1, 0);
+                        } else if (strstr((char *)data, "/v neka")) {
+                            PRINTFC_SERIAL("Choice: NEKA");
+                            esp_mqtt_client_publish(mqtt_client, topic_player_uplink, "{\"val\": \"neka\"}", 0, 1, 0);
+                        } else if (strstr((char *)data, "/v lyckas")) {
+                            PRINTFC_SERIAL("Choice: LYCKAS");
+                            esp_mqtt_client_publish(mqtt_client, topic_player_uplink, "{\"val\": \"lyckas\"}", 0, 1, 0);
+                        } else if (strstr((char *)data, "/v sabotage")) {
+                            PRINTFC_SERIAL("Choice: SABOTAGE");
+                            esp_mqtt_client_publish(mqtt_client, topic_player_uplink, "{\"val\": \"sabotage\"}", 0, 1, 0);
+                        } else if (strstr((char *)data, "/v starta")) {
+                            PRINTFC_SERIAL("Choice: STARTA SPEL");
+                            esp_mqtt_client_publish(mqtt_client, topic_player_uplink, "{\"val\": \"starta\"}", 0, 1, 0);
+                        } else if (data[0] == ':') {
+                            PRINTFC_SERIAL("Chat message sent: %s", (data + 1));
+                            char chat_message[512];
+                            snprintf(chat_message, sizeof(chat_message), "{\"id\": \"%s\", \"data\": \"%s\"}", shorter_id, (data + 1));
+                            esp_mqtt_client_publish(mqtt_client, TOPIC_TORGET, (char *)(chat_message), 0, 1, 0);
+                        } else if (strstr((char *)data, "/r reg")) {
+                            PRINTFC_SERIAL("Choice: REG_PLAYER");
+                            xEventGroupSetBits(wifi_event_group, BIT3);
+                        } else if (strstr((char *)data, "/r csr")) {
+                            PRINTFC_SERIAL("Choice: SEND_CSR");
+                            xEventGroupSetBits(wifi_event_group, BIT4);
+                        } else if (strstr((char *)data , "/r start")) {
+                            PRINTFC_SERIAL("Choice: START_GAME");
+                            xEventGroupSetBits(wifi_event_group, BIT5);
+                        } else {
+                            PRINTFC_SERIAL("Unknown choice command.");
+                        }
+                    }
+
+
+*/

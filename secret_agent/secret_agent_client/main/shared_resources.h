@@ -21,6 +21,7 @@ extern char shorter_id[32];
 extern char playerID[256];
 extern char signed_certificate[2048];
 extern uint8_t key_pem[2048];
+extern char topic_player_uplink[512];
 
 extern QueueHandle_t mqtt_event_queue;
 extern QueueHandle_t serial_msg_queue;

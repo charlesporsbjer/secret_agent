@@ -87,10 +87,14 @@ void serial_parser(char* data, esp_mqtt_client_handle_t client) {
     if(strstr(data, "/torget")){
         mqtt_torget(data, client);
     }
+    else if(strstr(data, "/val")){
+        mqtt_myndigheten(data, client);
+    }
 
     char downlink_topic[512];
     snprintf(downlink_topic, sizeof(downlink_topic), "/spelare/%s/downlink", playerID);
 
-   
+
+
 
 }
