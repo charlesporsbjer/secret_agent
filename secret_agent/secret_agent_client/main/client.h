@@ -13,7 +13,6 @@
 
 //STI1924stu
 #define CSR_ENDPOINT "https://" SERVER_IP ":9191/spelare/csr"
-
 #define SERVER_IP "172.16.218.190" //skooolen
 //#define SERVER_IP "192.168.0.155" //HEMMA på maccen
 

@@ -66,7 +66,9 @@ char* read_uart_data(uint8_t* data, char* input_buffer, int* buffer_index) {
                  }                              
             } else {
                 if (*buffer_index < 127) {
+                    printf("%c", data[i]);
                     input_buffer[*buffer_index] = data[i];
+                    fflush(stdout);
                     (*buffer_index)++;
                 } else {
                     // Buffer overflow
@@ -80,9 +82,15 @@ char* read_uart_data(uint8_t* data, char* input_buffer, int* buffer_index) {
     return NULL;  // No complete line received yet
 }
 
-void print_hex_data(uint8_t* data, int len) {
-    for (int i = 0; i < len; i++) {
-        printf("%02x ", data[i]);
+void serial_parser(char* data, esp_mqtt_client_handle_t client) {
+
+    if(strstr(data, "/torget")){
+        mqtt_torget(data, client);
     }
-    printf("\n");
+
+    char downlink_topic[512];
+    snprintf(downlink_topic, sizeof(downlink_topic), "/spelare/%s/downlink", playerID);
+
+   
+
 }
