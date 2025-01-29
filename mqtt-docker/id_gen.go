@@ -35,5 +35,6 @@ func GenerateName() string {
 	adj := adjectives[rand.Intn(len(adjectives))]
 	noun := nouns[rand.Intn(len(nouns))]
 	suffix := suffixes[rand.Intn(len(suffixes))]
+	fmt.Printf("%s_%s_%s", adj, noun, suffix)
 	return fmt.Sprintf("%s_%s_%s", adj, noun, suffix)
 }

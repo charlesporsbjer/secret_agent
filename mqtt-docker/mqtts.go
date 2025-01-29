@@ -119,7 +119,7 @@ var mqttClient mqtt.Client
 
 func startBrokerClient() {
 	opts := mqtt.NewClientOptions().
-		AddBroker("mqtt://192.168.2.206:8883").
+		AddBroker("mqtt://172.16.216.66:8883").
 		SetClientID("server").SetUsername("server").SetPassword("mosquitto")
 
 	mqttClient = mqtt.NewClient(opts)
@@ -545,6 +545,7 @@ func (gs *GameState) addPlayer(playerID string) {
 	}
 
 	PrintPlayerAction("Player %s added to the game.", playerID)
+	PublishMyndigheten2("DEBUG_NEW_PLAYER_JOINED")
 	PublishDownlinkAll("%s joined the game!", playerID)
 	PublishDownlinkAll("There are currently %d players in the game.", len(gs.Players))
 	gs.Mutex.Unlock()
@@ -581,6 +582,10 @@ func PublishDownlink(playerID string, format string, args ...interface{}) {
 	if err != nil {
 		PrintWarning("Failed to send message to %s: %v", topic, err)
 	}
+}
+
+func PublishMyndigheten2(format string) {
+	mqttClient.Publish("/myndigheten", 2, false, format)
 }
 
 func PublishMyndigheten(format string, args ...interface{}) {
