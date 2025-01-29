@@ -87,6 +87,8 @@ func spelare_handler(w http.ResponseWriter, r *http.Request) {
 	if gameState.Phase != PHASE_IDLE {
 		fmt.Println("Game is ongoing, not permitting clients to ask for ID")
 		http.Error(w, "Game is ongoing, cannot assign ID at this time", http.StatusConflict)
+
+		gameState.Mutex.Unlock()
 		return
 	}
 	gameState.Mutex.Unlock()
@@ -101,18 +103,19 @@ func spelare_handler(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("Incoming request body to /spelare: %s\n", string(body))
 
 	ipPort := r.RemoteAddr
-	host, _, err := net.SplitHostPort(ipPort)
-	fmt.Printf("IP '%s' sent to /spelare", host)
+	host, pp, err := net.SplitHostPort(ipPort)
+
+	fmt.Printf("IP '%s' sent to /spelare", host+pp)
 	if err != nil {
 		http.Error(w, "Invalid IP address format", http.StatusBadRequest)
 		return
 	}
 
-	playerID, found := ipToName[host]
+	playerID, found := ipToName[host+pp]
 	if !found {
 		playerID = GenerateName()
-		fmt.Printf("Assigning '%s' to '%s'.", playerID, host)
-		ipToName[host] = playerID
+		fmt.Printf("Assigning '%s' to '%s'.\n", playerID, host)
+		ipToName[host+pp] = playerID
 	}
 
 	response := map[string]string{"id": playerID}
@@ -140,12 +143,12 @@ func start_handler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	ipPort := r.RemoteAddr
-	host, _, err := net.SplitHostPort(ipPort)
+	host, pp, err := net.SplitHostPort(ipPort)
 	if err != nil {
 		http.Error(w, "Invalid IP address format", http.StatusBadRequest)
 		return
 	}
-	PlayerID, found := ipToName[host]
+	PlayerID, found := ipToName[host+pp]
 	if !found {
 		http.Error(w, "Hey what are you trying to do? You haven't registered to play!.", http.StatusBadRequest)
 		return
@@ -157,12 +160,12 @@ func start_handler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
-
 	if req["val"] == "nu kör vi" {
 
 		fmt.Println("'Start Handler' Attempting to Lock gamestate")
 		gameState.Mutex.Lock()
-		if len(gameState.Players) < 5 {
+		// 1 player for debug 5 for prod
+		if len(gameState.Players) < 1 {
 			PrintWarning("'%s' attempted to start the game but failed: Too few players: Player count: %d", PlayerID, len(gameState.Players))
 			http.Error(w, "Failed to start game, too few players.", http.StatusBadRequest)
 			return
@@ -183,18 +186,18 @@ func start_handler(w http.ResponseWriter, r *http.Request) {
 
 func spelare_csr_handler(w http.ResponseWriter, r *http.Request) {
 	ipPort := r.RemoteAddr
-	host, _, err := net.SplitHostPort(ipPort)
+	_, _, err := net.SplitHostPort(ipPort)
 	if err != nil {
 		http.Error(w, "Invalid IP address format", http.StatusBadRequest)
 		return
 	}
 
-	PlayerID, found := ipToName[host]
+	// PlayerID, found := ipToName[host+pp]
 
-	if !found {
-		http.Error(w, "Did not find a player ID that belongs to you. You might need to ask for a PlayerID first.", http.StatusBadRequest)
-		return
-	}
+	// if !found {
+	// 	http.Error(w, "Did not find a player ID that belongs to you. You might need to ask for a PlayerID first.", http.StatusBadRequest)
+	// 	return
+	// }
 
 	fmt.Println("[spelare_csr_handler] Reading request body")
 
@@ -311,6 +314,6 @@ func spelare_csr_handler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println("[spelare_csr_handler] Failed to write response to client")
 	}
-	gameState.addPlayer(PlayerID)
+	gameState.addPlayer(csr.Subject.CommonName)
 
 }

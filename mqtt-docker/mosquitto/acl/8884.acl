@@ -1,4 +1,4 @@
 pattern readwrite /torget
 pattern read /myndigheten
-pattern write /spelare/%u/uplink
-pattern read /spelare/%u/downlink
+pattern write /spelare/%c/uplink
+pattern read /spelare/%c/downlink
